@@ -1,4 +1,4 @@
-﻿# 🎮 Pinto 2D Top-Down Survival Arena
+# 🎮 Pinto 2D Top-Down Survival Arena
 
 <div align="center">
 
@@ -26,11 +26,11 @@
 
 ## ✨ ฟีเจอร์หลัก (Key Features)
 
-- 🤖 **Responsive 8-Directional Kinematics**: ควบคุมน้อง Pinto เคลื่อนที่ได้อย่างอิสระ 8 ทิศทาง พร้อมแอนิเมชัน Pixel Art 4 สถานะ (idle, walk, hurt, death)
-- 🎯 **Auto-Attack Combat System**: ปืนกลตรวจจับและยิงกระสุนใส่มอนสเตอร์ที่ใกล้ที่สุดอัตโนมัติ (รองรับ Multi-shot, Bullet Pierce, Attack Speed)
+- 🤖 **Responsive 8-Directional Kinematics**: ควบคุมน้อง Pinto เคลื่อนที่ได้อย่างอิสระ 8 ทิศทาง พร้อมแอนิเมชัน Pixel Art 4 สถานะ (`idle`, `walk`, `hurt`, `death`)
+- 🎯 **Auto-Attack Combat System**: ตรวจจับและยิงกระสุนใส่มอนสเตอร์ที่ใกล้ที่สุดอัตโนมัติ (รองรับ Multi-shot, Bullet Pierce, Attack Speed)
 - 💥 **Floating Damage Numbers**: ตัวเลขดาเมจลอยขึ้นเหนือหัวมอนสเตอร์เมื่อถูกโจมตี (ตัวเลขสีขาวสำหรับ Hit ปกติ และสีทองสำหรับ Critical Hit)
 - 👾 **5-Wave Escalation & Multi-Phase Boss**:
-  - **4 มอนสเตอร์พื้นฐาน**: Slime (ดึ๋งๆ อึด), Bat (กระพือปีกบินไว), Drone (ลอยยิงกระสุนสวน), Golem (เดินย่างสามขุมชนหนัก)
+  - **4 มอนสเตอร์พื้นฐาน**: `Slime` (ดึ๋งๆ อึด), `Bat` (กระพือปีกบินไว), `Drone` (ลอยยิงกระสุนสวน), `Golem` (เดินย่างสามขุมชนหนัก)
   - **Wave 5 Boss ("Giga Null")**: บอสใหญ่ 3 Phase พร้อมท่ายิงวงแหวน พุ่งชนแบบ Telegraphed และเรียกลูกสมุน
 - 🃏 **Roguelite Upgrade Cards**: สะสม Gem XP เพื่อเลเวลอัปและสุ่มการ์ด 3 ใบจากทั้งหมด 10 สายพลัง (เช่น เพิ่มจำนวนกระสุน, ทะลวงเกราะ, ฮีลฉุกเฉิน, ขยายรัศมีแม่เหล็ก)
 - 🗺️ **True Top-Down 2D Viewport**: ความละเอียดฐาน 640x360 ขยายเต็มหน้าจอ 1080p/1440p/4K คมชัด ไม่มีขอบดำ พร้อมระบบ Y-Sorting จัดลำดับความลึก
@@ -43,11 +43,11 @@
 
 | ปุ่มกด (Key) | คำสั่ง (Action) |
 | :--- | :--- |
-| **W / A / S / D** หรือ **ปุ่มลูกศร** | เดิน 8 ทิศทาง (Move Pinto) |
-| **อัตโนมัติ (Auto)** | โจมตีมอนสเตอร์ที่ใกล้ที่สุด (Auto-Attack) |
-| **อัตโนมัติ (Auto)** | แม่เหล็กดูด Gem XP เข้าหาตัว (XP Magnet) |
-| **Spacebar / คลิกเมาส์** | เลือกการ์ดอัปเกรดเมื่อเลเวลอัป (Select Upgrade) |
-| **Esc / P** | หยุดเกมชั่วคราว (Pause Game) |
+| **`W / A / S / D`** หรือ **`ปุ่มลูกศร`** | เดิน 8 ทิศทาง (Move Pinto) |
+| **`อัตโนมัติ (Auto)`** | โจมตีมอนสเตอร์ที่ใกล้ที่สุด (Auto-Attack) |
+| **`อัตโนมัติ (Auto)`** | แม่เหล็กดูด Gem XP เข้าหาตัว (XP Magnet) |
+| **`Spacebar / คลิกเมาส์`** | เลือกการ์ดอัปเกรดเมื่อเลเวลอัป (Select Upgrade) |
+| **`Esc / P`** | หยุดเกมชั่วคราว (Pause Game) |
 
 ---
 
@@ -82,28 +82,37 @@
 
 ## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
-`	ext
+```
 pinto-2d-top-down/
-├── assets/                  # Assets ภายนอก (Banner & Reference)
-└── new-game-project/        # โฟลเดอร์โปรเจกต์ Godot 4
-    ├── project.godot        # การตั้งค่า Engine, Viewport, Input Map
-    ├── autoload/            # Singletons แกนกลาง
-    │   ├── audio_manager.gd # ระบบเสียง Chiptune Polyphonic SFX & BGM
-    │   ├── event_bus.gd     # Signal Bus กระจาย Event ทั่วทั้งเกม
-    │   ├── game_state.gd    # จัดการสเตตัส เลเวล XP และคลื่นมอนสเตอร์
-    │   ├── save_manager.gd  # บันทึกและโหลด High Score ลง JSON
+├── assets/                    # Assets ภายนอก (Banner & Reference)
+│   └── pinto.jpg              # ภาพต้นฉบับน้อง Pinto
+│
+└── new-game-project/          # โฟลเดอร์โปรเจกต์ Godot 4
+    ├── project.godot          # การตั้งค่า Engine, Viewport, Input Map
+    │
+    ├── autoload/              # Singletons แกนกลาง
+    │   ├── audio_manager.gd   # ระบบเสียง Chiptune Polyphonic SFX & BGM
+    │   ├── event_bus.gd       # Signal Bus กระจาย Event ทั่วทั้งเกม
+    │   ├── game_state.gd      # จัดการสเตตัส เลเวล XP และคลื่นมอนสเตอร์
+    │   ├── save_manager.gd    # บันทึกและโหลด High Score ลง JSON
     │   └── upgrade_catalog.gd # แค็ตตาล็อกการ์ดอัปเกรดทั้ง 10 สาย
-    ├── assets/              # SpriteSheets, SFX WAVs, UI Icons
-    ├── scenes/              # Scene ทั้งหมดในเกม
-    │   ├── main.tscn        # Scene หลักประกอบฉาก กล้อง HUD และ Spawner
-    │   ├── player/          # น้อง Pinto (player.tscn / pinto_frames.tres)
-    │   ├── enemies/         # มอนสเตอร์ 4 ชนิด และบอส Giga Null
-    │   ├── weapons/         # กระสุนของ Pinto และกระสุนของศัตรู
-    │   ├── pickups/         # Gem XP (Bronze, Silver, Gold, Boss)
-    │   ├── world/           # แผนที่ Arena, กำแพง, Props, และ Spawner
-    │   └── ui/              # HUD, การ์ดอัปเกรด, Damage Number, Victory/Game Over
-    └── tests/               # E2E Headless Test Suites 15 ชุด (144+ Tests)
-`
+    │
+    ├── assets/                # SpriteSheets, SFX WAVs, UI Icons
+    │   ├── sprites/           # Sprites ของ Pinto, มอนสเตอร์, และ Gem
+    │   ├── sfx/               # ไฟล์เสียงเอฟเฟกต์ WAV
+    │   └── ui/                # Icons สำหรับการ์ดอัปเกรด
+    │
+    ├── scenes/                # Scene ทั้งหมดในเกม
+    │   ├── main.tscn          # Scene หลักประกอบฉาก กล้อง HUD และ Spawner
+    │   ├── player/            # น้อง Pinto (player.tscn / pinto_frames.tres)
+    │   ├── enemies/           # มอนสเตอร์ 4 ชนิด และบอส Giga Null
+    │   ├── weapons/           # กระสุนของ Pinto และกระสุนของศัตรู
+    │   ├── pickups/           # Gem XP (Bronze, Silver, Gold, Boss)
+    │   ├── world/             # แผนที่ Arena, กำแพง, Props, และ Spawner
+    │   └── ui/                # HUD, การ์ดอัปเกรด, Damage Number, Victory/Game Over
+    │
+    └── tests/                 # E2E Headless Test Suites 15 ชุด (144+ Tests)
+```
 
 ---
 
@@ -111,11 +120,10 @@ pinto-2d-top-down/
 
 1. ติดตั้ง **[Godot Engine 4](https://godotengine.org/)** (เวอร์ชัน 4.2 ขึ้นไป)
 2. โคลน Repository นี้:
-   `ash
+   ```bash
    git clone https://github.com/Theeraphat-S/pinto-2d-top-down.git
-   `
-3. เปิด Godot Engine แล้วกด **Import** -> เลือกไฟล์ 
-ew-game-project/project.godot
+   ```
+3. เปิด Godot Engine แล้วกด **Import** -> เลือกไฟล์ `new-game-project/project.godot`
 4. กดปุ่ม **F5** (หรือปุ่ม **Play ▶️** มุมขวาบน) เพื่อเริ่มเล่นเกมได้ทันที!
 
 ---
