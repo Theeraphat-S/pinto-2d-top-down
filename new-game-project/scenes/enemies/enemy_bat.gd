@@ -23,6 +23,7 @@ func _init() -> void:
 	drop_gem_tier = 0 # Small (1 XP)
 	drop_gem_count = 1
 	knockback_resistance = 0.10
+	animation_fps = 8.0
 
 func _ready() -> void:
 	super._ready()

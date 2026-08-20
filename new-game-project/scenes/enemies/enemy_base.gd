@@ -2,9 +2,10 @@ class_name EnemyBase
 extends CharacterBody2D
 
 # ==============================================================================
-# PINTO 2D TOP-DOWN SURVIVAL ARENA - ENEMY BASE CLASS (Milestone M4)
+# PINTO 2D TOP-DOWN SURVIVAL ARENA - ENEMY BASE CLASS (Milestone M4 / R1 & R2)
 # True top-down floating kinematics, foot collision, contact damage hurtbox,
-# damage flash, knockback resistance, XP gem drop generation & EventBus dispatch.
+# sprite animation cycling, damage flash, knockback resistance, floating damage
+# numbers, XP gem drop generation & EventBus dispatch.
 # ==============================================================================
 
 const XP_GEM_PATH: String = "res://scenes/pickups/xp_gem.tscn"
@@ -21,12 +22,16 @@ const XP_GEM_PATH: String = "res://scenes/pickups/xp_gem.tscn"
 @export var drop_gem_count: int = 1
 @export var knockback_resistance: float = 0.20
 @export var contact_cooldown: float = 0.5
+@export var animation_fps: float = 7.0
 
 var current_health: float = 25.0
 var is_dead: bool = false
 var knockback_velocity: Vector2 = Vector2.ZERO
 var target_player: Node2D = null
 
+var base_modulate: Color = Color.WHITE
+var _anim_timer: float = 0.0
+var _current_frame: int = 0
 var _contact_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _is_flashing: bool = false
@@ -49,11 +54,23 @@ var event_bus: Node:
 			return get_tree().root.get_node("EventBus")
 		return null
 
+func _ensure_nodes() -> void:
+	if sprite == null:
+		sprite = get_node_or_null("Sprite2D") as Sprite2D
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if hitbox_area == null:
+		hitbox_area = get_node_or_null("HitboxArea") as Area2D
+	if death_sfx == null:
+		death_sfx = get_node_or_null("DeathSFX") as AudioStreamPlayer2D
+
 func _init() -> void:
 	add_to_group("enemies")
 	y_sort_enabled = true
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	current_health = max_health
+	_anim_timer = randf_range(0.0, 1.0)
+	_current_frame = randi() % 4
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -65,6 +82,13 @@ func _ready() -> void:
 	collision_mask = 7
 	
 	current_health = max_health
+	
+	_ensure_nodes()
+	if sprite:
+		var max_f: int = sprite.hframes if sprite.hframes > 0 else 4
+		_current_frame = randi() % max_f
+		sprite.frame = _current_frame
+		sprite.modulate = base_modulate
 	
 	if hitbox_area:
 		if not hitbox_area.body_entered.is_connected(_on_hitbox_body_entered):
@@ -82,8 +106,11 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 		
-	# 1. Update timers
+	_ensure_nodes()
+	
+	# 1. Update timers and animation
 	_update_timers(delta)
+	_update_animation(delta)
 	
 	# 2. Acquire / validate player target
 	if target_player == null or not is_instance_valid(target_player):
@@ -98,8 +125,13 @@ func _physics_process(delta: float) -> void:
 	else:
 		knockback_velocity = Vector2.ZERO
 		
-	velocity = move_dir * move_speed + knockback_velocity
-	move_and_slide()
+	if target_player != null and is_instance_valid(target_player):
+		velocity = move_dir * move_speed + knockback_velocity
+	elif knockback_velocity != Vector2.ZERO:
+		velocity = knockback_velocity
+		
+	if is_inside_tree():
+		move_and_slide()
 	
 	# 5. Flip sprite facing direction
 	if sprite and absf(velocity.x) > 5.0:
@@ -107,6 +139,18 @@ func _physics_process(delta: float) -> void:
 		
 	# 6. Apply continuous contact damage if overlapping player
 	_check_contact_damage()
+
+func _update_animation(delta: float) -> void:
+	_ensure_nodes()
+	if sprite == null or sprite.hframes <= 1 or animation_fps <= 0.0:
+		return
+		
+	_anim_timer += delta
+	var frame_interval: float = 1.0 / animation_fps
+	if _anim_timer >= frame_interval:
+		_anim_timer = fmod(_anim_timer, frame_interval)
+		_current_frame = (_current_frame + 1) % sprite.hframes
+		sprite.frame = _current_frame
 
 func _get_movement_direction(_delta: float) -> Vector2:
 	if target_player == null or not is_instance_valid(target_player):
@@ -125,18 +169,45 @@ func _update_timers(delta: float) -> void:
 		_flash_timer -= delta
 		if _flash_timer <= 0.0:
 			_is_flashing = false
+			_ensure_nodes()
 			if sprite:
-				sprite.modulate = Color.WHITE
+				sprite.modulate = base_modulate
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
 	if is_dead or amount <= 0.0:
 		return
 		
-	current_health -= amount
+	current_health = maxf(0.0, current_health - amount)
 	_flash_sprite(is_crit)
+	_spawn_damage_number(amount, is_crit)
 	
 	if current_health <= 0.0:
 		die()
+
+func _spawn_damage_number(amount: float, is_crit: bool = false) -> void:
+	if amount <= 0.0:
+		return
+		
+	var container := _get_spawn_container()
+	if container == null:
+		return
+		
+	var scene: PackedScene = load("res://scenes/ui/damage_number.tscn") as PackedScene
+	if scene == null:
+		return
+		
+	var popup: Node = scene.instantiate()
+	if popup:
+		var offset := Vector2(randf_range(-4.0, 4.0), -14.0)
+		var spawn_pos := global_position + offset
+		if popup is Node2D:
+			popup.global_position = spawn_pos
+		if popup.has_method("setup"):
+			popup.setup(amount, is_crit, spawn_pos)
+		if container.is_inside_tree():
+			container.call_deferred("add_child", popup)
+		else:
+			container.add_child(popup)
 
 func apply_knockback(dir: Vector2, force: float) -> void:
 	if is_dead or knockback_resistance >= 1.0:
@@ -146,7 +217,8 @@ func apply_knockback(dir: Vector2, force: float) -> void:
 
 func _flash_sprite(is_crit: bool = false) -> void:
 	_is_flashing = true
-	_flash_timer = 0.12
+	_flash_timer = 0.08
+	_ensure_nodes()
 	if sprite:
 		if is_crit:
 			sprite.modulate = Color(2.0, 0.3, 0.3, 1.0) # Intense crit red
@@ -182,6 +254,7 @@ func die() -> void:
 		return
 	is_dead = true
 	
+	_ensure_nodes()
 	# Disable collisions immediately
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
@@ -221,16 +294,18 @@ func _spawn_xp_gems() -> void:
 				gem.setup(drop_gem_tier, drop_pos)
 			elif gem is Node2D:
 				gem.global_position = drop_pos
-			container.call_deferred("add_child", gem)
+			if container.is_inside_tree():
+				container.call_deferred("add_child", gem)
+			else:
+				container.add_child(gem)
 
 func _get_spawn_container() -> Node:
+	var p: Node = get_parent()
+	if p != null:
+		return p
+		
 	if not is_inside_tree():
 		return null
-		
-	# Check if parent is Entities container in Arena
-	var p: Node = get_parent()
-	if p != null and (p.name == "Entities" or p is Node2D):
-		return p
 		
 	# Check for Arena in tree
 	var arena := get_tree().root.find_child("Arena", true, false)
@@ -248,7 +323,10 @@ func _play_death_sfx() -> void:
 		var sfx := AudioStreamPlayer2D.new()
 		sfx.stream = stream
 		sfx.global_position = global_position
-		container.call_deferred("add_child", sfx)
+		if container.is_inside_tree():
+			container.call_deferred("add_child", sfx)
+		else:
+			container.add_child(sfx)
 		sfx.tree_entered.connect(func():
 			sfx.play()
 			sfx.finished.connect(sfx.queue_free)

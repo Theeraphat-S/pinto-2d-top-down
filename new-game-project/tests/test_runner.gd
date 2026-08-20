@@ -12,9 +12,12 @@ const SUITE_PATHS: Array[String] = [
 	"res://tests/test_hud_and_persistence.gd",
 	"res://tests/test_audio_manager.gd",
 	"res://tests/test_m7_empirical_challenger.gd",
+	"res://tests/test_r2_empirical_challenger.gd",
 	"res://tests/test_camera_and_hud_clamping.gd",
 	"res://tests/test_adversarial_stress.gd",
-	"res://tests/test_adversarial_coverage.gd"
+	"res://tests/test_adversarial_coverage.gd",
+	"res://tests/test_enemy_animations_and_damage_popups.gd",
+	"res://tests/test_combat_stress_and_boundary_conditions.gd"
 ]
 
 func _init() -> void:

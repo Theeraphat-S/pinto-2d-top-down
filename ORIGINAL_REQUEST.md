@@ -18,3 +18,26 @@ Fix the Catlike Coding True Top-Down 2D resolution setup and runtime errors in P
 - Fix integer divisions to float divisions.
 
 4. Run all headless test suites, verify 100% pass, and git push to GitHub origin/main.
+
+## 2026-08-20T08:24:04Z
+
+Implement animated enemy sprites and floating damage numbers in Pinto 2D Top-Down Survival Arena in Godot 4:
+
+1. R1: Enemy Sprite Animation:
+- In enemy_slime.tscn, enemy_bat.tscn, enemy_drone.tscn, enemy_golem.tscn, and boss_giga_null.tscn:
+  * The sprite sheets are 128x32 with 4 horizontal frames (32x32 each, Boss is 192x48 with 4 frames of 48x48).
+  * Configure Sprite2D hframes = 4 (or AnimatedSprite2D with SpriteFrames).
+  * Animate frame cycling (e.g. 6-8 FPS based on movement speed/time) so Slimes visibly squish/stretch bounce, Bats flap wings, Drones pulse/bob, Golems step heavily, and Boss animates smoothly.
+  * Keep visual hurt flash (modulate white/red for 0.08s) on taking damage.
+
+2. R2: Floating Damage Numbers:
+- Create a floating damage popup system (scenes/ui/damage_number.tscn and damage_number.gd).
+- When any enemy (or Boss) takes damage in take_damage(amount):
+  * Spawn a damage label above the enemy head (global_position + Vector2(randf_range(-4, 4), -14)).
+  * Show damage integer (e.g. "10", "25").
+  * Use a Tween to float upwards by ~20px, scale pop (1.2 -> 1.0), and fade out alpha over 0.5s, then queue_free().
+
+3. R3: Test Suite & GitHub Sync:
+- Verify all headless tests pass 100%.
+- Git add, commit, and push to GitHub origin/main.
+

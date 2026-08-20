@@ -27,6 +27,7 @@ knockback_resistance = 0.3
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_spr")
+hframes = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 3)

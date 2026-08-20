@@ -44,6 +44,15 @@ var _p3_spiral_subtimer: float = 0.0
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var phase_label: Label = $HealthBar/PhaseLabel
 
+func _ensure_nodes() -> void:
+	super._ensure_nodes()
+	if health_bar == null:
+		health_bar = get_node_or_null("HealthBar") as ProgressBar
+	if phase_label == null and health_bar != null:
+		phase_label = health_bar.get_node_or_null("PhaseLabel") as Label
+	elif phase_label == null:
+		phase_label = get_node_or_null("HealthBar/PhaseLabel") as Label
+
 func _init() -> void:
 	super._init()
 	enemy_type = "boss"
@@ -55,10 +64,13 @@ func _init() -> void:
 	drop_gem_tier = 2 # Large (20 XP each)
 	drop_gem_count = 5 # 5 x 20 XP = 100 XP total
 	knockback_resistance = 1.0 # Immune to knockback
+	animation_fps = 7.0
 
 func _ready() -> void:
+	_ensure_nodes()
 	super._ready()
 	add_to_group("boss")
+	base_modulate = Color.WHITE
 	current_health = max_health
 	current_phase = 1
 	
@@ -212,7 +224,7 @@ func _process_phase_3(delta: float) -> void:
 		_dash_subtimer += delta
 		# Visual telegraph shake/flash
 		if sprite:
-			sprite.modulate = Color(2.5, 0.4, 0.4, 1.0) if int(_dash_subtimer * 20.0) % 2 == 0 else Color.WHITE
+			sprite.modulate = Color(2.5, 0.4, 0.4, 1.0) if int(_dash_subtimer * 20.0) % 2 == 0 else base_modulate
 		if _dash_subtimer >= 0.6:
 			_execute_charge_dash()
 	elif _is_dashing:
@@ -222,7 +234,7 @@ func _process_phase_3(delta: float) -> void:
 			_is_dashing = false
 			move_speed = 110.0
 			if sprite:
-				sprite.modulate = Color.WHITE
+				sprite.modulate = base_modulate
 				
 	# 2. Spiral Bullet Hell Stream (12 orbs)
 	_p3_spiral_timer += delta
@@ -299,6 +311,7 @@ func _enter_phase(new_phase: int) -> void:
 	if current_phase == new_phase:
 		return
 	current_phase = new_phase
+	_ensure_nodes()
 	
 	if phase_label:
 		phase_label.text = "PHASE " + str(current_phase)
@@ -306,15 +319,23 @@ func _enter_phase(new_phase: int) -> void:
 	if event_bus:
 		event_bus.boss_phase_changed.emit(current_phase)
 		
-	# Phase transition effects
+	# Phase transition effects and animation speedups
+	match current_phase:
+		1:
+			animation_fps = 7.0
+			base_modulate = Color.WHITE
+		2:
+			animation_fps = 9.0
+			base_modulate = Color(1.3, 0.8, 0.8, 1.0)
+		3:
+			animation_fps = 12.0
+			base_modulate = Color(1.5, 0.5, 0.5, 1.0)
+			
 	if sprite:
-		match current_phase:
-			2:
-				sprite.modulate = Color(1.3, 0.8, 0.8, 1.0)
-			3:
-				sprite.modulate = Color(1.5, 0.5, 0.5, 1.0)
+		sprite.modulate = base_modulate
 
 func _update_health_bar() -> void:
+	_ensure_nodes()
 	if health_bar:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
@@ -322,7 +343,6 @@ func _update_health_bar() -> void:
 func die() -> void:
 	if is_dead:
 		return
-	is_dead = true
 	
 	if event_bus:
 		event_bus.boss_hp_changed.emit(0.0, max_health)
