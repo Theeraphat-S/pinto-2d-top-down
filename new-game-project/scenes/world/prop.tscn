@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/world/prop.gd" id="1_prop_script"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/props.png" id="2_props_tex"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_foot"]
+size = Vector2(28, 14)
+
+[node name="Prop" type="StaticBody2D"]
+y_sort_enabled = true
+collision_mask = 0
+script = ExtResource("1_prop_script")
+
+[node name="Shadow" type="Node2D" parent="."]
+z_index = -1
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -24)
+texture = ExtResource("2_props_tex")
+region_enabled = true
+region_rect = Rect2(0, 16, 32, 48)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -7)
+shape = SubResource("RectangleShape2D_foot")

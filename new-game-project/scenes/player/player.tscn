@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://bkn5s7q3vxepw"]
+
+[ext_resource type="Script" path="res://scenes/player/player.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://scenes/player/pinto_frames.tres" id="2_frames"]
+[ext_resource type="AudioStream" path="res://assets/sfx/shoot.wav" id="3_shoot_sfx"]
+[ext_resource type="AudioStream" path="res://assets/sfx/hit.wav" id="4_hurt_sfx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_feet"]
+radius = 6.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_magnet"]
+radius = 90.0
+
+[node name="Player" type="CharacterBody2D"]
+y_sort_enabled = true
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = ExtResource("2_frames")
+animation = &"idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 6)
+shape = SubResource("CircleShape2D_feet")
+
+[node name="MagnetArea" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 32
+
+[node name="MagnetCollisionShape" type="CollisionShape2D" parent="MagnetArea"]
+shape = SubResource("CircleShape2D_magnet")
+
+[node name="ShootSFX" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_shoot_sfx")
+
+[node name="HurtSFX" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_hurt_sfx")

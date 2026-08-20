@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/enemies/enemy_base.gd" id="1_ebase"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/slime.png" id="2_spr"]
+[ext_resource type="AudioStream" path="res://assets/sfx/hit.wav" id="3_sfx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_foot"]
+radius = 7.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hitbox"]
+radius = 9.0
+
+[node name="EnemyBase" type="CharacterBody2D" groups=["enemies"]]
+y_sort_enabled = true
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_ebase")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_spr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4)
+shape = SubResource("CircleShape2D_foot")
+
+[node name="HitboxArea" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 2
+
+[node name="HitboxShape" type="CollisionShape2D" parent="HitboxArea"]
+shape = SubResource("CircleShape2D_hitbox")
+
+[node name="DeathSFX" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_sfx")

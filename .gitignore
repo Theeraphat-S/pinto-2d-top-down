@@ -1,0 +1,11 @@
+﻿# Godot 4 cache
+.godot/
+*/.godot/
+
+# Agent internals
+.agents/
+*/.agents/
+
+# OS / Editor
+.DS_Store
+Thumbs.db

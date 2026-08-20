@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/enemies/boss_giga_null.gd" id="1_eboss"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/boss_giga_null.png" id="2_spr"]
+[ext_resource type="AudioStream" path="res://assets/sfx/explosion.wav" id="3_sfx"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_foot"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hitbox"]
+radius = 28.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.15, 0.15, 0.2, 0.8)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
+bg_color = Color(0.9, 0.15, 0.25, 0.9)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="BossGigaNull" type="CharacterBody2D" groups=["boss", "enemies", "y_sort_group"]]
+y_sort_enabled = true
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_eboss")
+enemy_type = "boss"
+max_health = 600.0
+move_speed = 60.0
+contact_damage = 30.0
+score_value = 500
+drop_gem_tier = 2
+drop_gem_count = 5
+knockback_resistance = 1.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_spr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 16)
+shape = SubResource("CircleShape2D_foot")
+
+[node name="HitboxArea" type="Area2D" parent="."]
+collision_layer = 128
+collision_mask = 2
+
+[node name="HitboxShape" type="CollisionShape2D" parent="HitboxArea"]
+shape = SubResource("CircleShape2D_hitbox")
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = -40.0
+offset_top = -52.0
+offset_right = 40.0
+offset_bottom = -44.0
+theme_override_styles/background = SubResource("StyleBoxFlat_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
+max_value = 600.0
+value = 600.0
+show_percentage = false
+
+[node name="PhaseLabel" type="Label" parent="HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -12.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 9
+text = "PHASE 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DeathSFX" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_sfx")

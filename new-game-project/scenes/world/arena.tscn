@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scenes/world/arena.gd" id="1_arena_script"]
+[ext_resource type="PackedScene" path="res://scenes/world/prop.tscn" id="2_prop_scene"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_top"]
+size = Vector2(1280, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bottom"]
+size = Vector2(1280, 32)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_left"]
+size = Vector2(32, 720)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_right"]
+size = Vector2(32, 720)
+
+[node name="Arena" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_arena_script")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+z_index = -10
+
+[node name="Walls" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="TopWall" type="CollisionShape2D" parent="Walls"]
+position = Vector2(640, 16)
+shape = SubResource("RectangleShape2D_top")
+
+[node name="BottomWall" type="CollisionShape2D" parent="Walls"]
+position = Vector2(640, 704)
+shape = SubResource("RectangleShape2D_bottom")
+
+[node name="LeftWall" type="CollisionShape2D" parent="Walls"]
+position = Vector2(16, 360)
+shape = SubResource("RectangleShape2D_left")
+
+[node name="RightWall" type="CollisionShape2D" parent="Walls"]
+position = Vector2(1264, 360)
+shape = SubResource("RectangleShape2D_right")
+
+[node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ServerRack1" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(240, 180)
+prop_type = 0
+
+[node name="ServerRack2" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(1040, 180)
+prop_type = 0
+
+[node name="ServerRack3" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(240, 540)
+prop_type = 0
+
+[node name="ServerRack4" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(1040, 540)
+prop_type = 0
+
+[node name="Pylon1" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(480, 220)
+prop_type = 1
+
+[node name="Pylon2" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(800, 220)
+prop_type = 1
+
+[node name="Pylon3" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(480, 500)
+prop_type = 1
+
+[node name="Pylon4" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(800, 500)
+prop_type = 1
+
+[node name="Crystal1" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(380, 360)
+prop_type = 2
+
+[node name="Crystal2" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(900, 360)
+prop_type = 2
+
+[node name="Terminal1" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(640, 150)
+prop_type = 3
+
+[node name="Terminal2" parent="Props" instance=ExtResource("2_prop_scene")]
+position = Vector2(640, 570)
+prop_type = 3
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true

@@ -1,0 +1,176 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/victory_screen.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/sfx/victory.wav" id="2_sfx"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.04, 0.08, 0.07, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.98, 0.8, 0.1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="VictoryScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 15
+visible = false
+script = ExtResource("1_script")
+
+[node name="DimOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.06, 0.05, 0.85)
+
+[node name="CenterContainer" type="CenterContainer" parent="DimOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModalPanel" type="PanelContainer" parent="DimOverlay/CenterContainer"]
+custom_minimum_size = Vector2(280, 200)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="MarginContainer" type="MarginContainer" parent="DimOverlay/CenterContainer/ModalPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Header" type="VBoxContainer" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+alignment = 1
+
+[node name="VictoryTitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.8, 0.1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 18
+text = "★ VICTORY! ★"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.83, 0.75, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 9
+text = "CYBER-ARENA PURGED OF ALL THREATS"
+horizontal_alignment = 1
+
+[node name="NewRecordBadge" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 10
+text = "★ NEW HIGH SCORE RECORD! ★"
+horizontal_alignment = 1
+
+[node name="HSeparator1" type="HSeparator" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 3
+columns = 2
+
+[node name="ScoreTitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 9
+text = "FINAL SCORE:"
+
+[node name="ScoreValue" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 2
+
+[node name="TimeTitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 9
+text = "SURVIVAL TIME:"
+
+[node name="TimeValue" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "00:00"
+horizontal_alignment = 2
+
+[node name="KillsTitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 9
+text = "ENEMIES PURGED:"
+
+[node name="KillsValue" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 2
+
+[node name="BestTitle" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 9
+text = "HIGH SCORE:"
+
+[node name="BestValue" type="Label" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/StatsGrid"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 2
+
+[node name="HSeparator2" type="HSeparator" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="PlayAgainButton" type="Button" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(90, 24)
+layout_mode = 2
+text = "PLAY AGAIN"
+
+[node name="QuitButton" type="Button" parent="DimOverlay/CenterContainer/ModalPanel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(70, 24)
+layout_mode = 2
+text = "QUIT"
+
+[node name="VictorySFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_sfx")
