@@ -28,7 +28,7 @@
 | M1 | Resolution, Viewport & Camera Setup | project.godot, scenes/main.tscn, scenes/main.gd, test zoom/resolution assertions | none | DONE |
 | M2 | Physics Query Flushing Fix | scenes/enemies/enemy_base.gd, xp_gem.gd, boss_giga_null.gd, projectile.gd, enemy_projectile.gd, player.gd, enemy_drone.gd, spawner.gd | none | DONE |
 | M3 | GDScript Warnings Cleanup | autoload/event_bus.gd, autoload/audio_manager.gd, autoload/game_state.gd, scenes/ui/*.gd, tests/*.gd | none | DONE |
-| M4 | Verification & Git Push | Run headless test runner (12 suites, 144 tests), verify 100% pass, git push origin/main | M1, M2, M3 | IN_PROGRESS |
+| M4 | Verification & Git Push | Run headless test runner (12 suites, 144 tests), verify 100% pass, git push origin/main | M1, M2, M3 | DONE |
 
 ## Code Layout
 - `new-game-project/project.godot`: Display / window resolution settings
