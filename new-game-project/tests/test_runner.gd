@@ -10,6 +10,7 @@ const SUITE_PATHS: Array[String] = [
 	"res://tests/test_roguelite_upgrades.gd",
 	"res://tests/test_arena_and_collisions.gd",
 	"res://tests/test_hud_and_persistence.gd",
+	"res://tests/test_audio_manager.gd",
 	"res://tests/test_adversarial_stress.gd",
 	"res://tests/test_adversarial_coverage.gd"
 ]

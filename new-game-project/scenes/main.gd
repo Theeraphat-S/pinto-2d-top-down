@@ -13,6 +13,7 @@ extends Node2D
 @onready var upgrade_menu: CanvasLayer = $UpgradeMenu
 @onready var victory_screen: CanvasLayer = $VictoryScreen
 @onready var game_over_screen: CanvasLayer = $GameOverScreen
+@onready var spawner: Node2D = get_node_or_null("Spawner")
 
 func _ready() -> void:
 	_initialize_game()
@@ -36,6 +37,7 @@ func _configure_camera() -> void:
 	if not camera:
 		return
 		
+	camera.zoom = Vector2(2.5, 2.5)
 	# Clamping camera limits to arena bounds (1280x720)
 	if arena and arena.has_method("get_arena_bounds"):
 		var bounds: Rect2 = arena.get_arena_bounds()

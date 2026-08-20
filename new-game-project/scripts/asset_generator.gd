@@ -933,8 +933,21 @@ static func _generate_sfx(dir: String) -> void:
 	_save_wav(dir + "explosion.wav", _synth_explosion())
 	_save_wav(dir + "gem_pickup.wav", _synth_gem_pickup())
 	_save_wav(dir + "levelup.wav", _synth_levelup())
+	_save_wav(dir + "player_hurt.wav", _synth_player_hurt())
+	_save_wav(dir + "boss_alarm.wav", _synth_boss_alarm())
 	_save_wav(dir + "game_over.wav", _synth_game_over())
 	_save_wav(dir + "victory.wav", _synth_victory())
+	_save_wav(dir + "bgm.wav", _synth_retro_bgm())
+
+static func _square_wave(phase: float, duty: float = 0.5) -> float:
+	return 1.0 if fmod(phase / TAU, 1.0) < duty else -1.0
+
+static func _saw_wave(phase: float) -> float:
+	return 2.0 * fmod(phase / TAU, 1.0) - 1.0
+
+static func _triangle_wave(phase: float) -> float:
+	var t := fmod(phase / TAU, 1.0)
+	return (4.0 * t - 1.0) if t < 0.5 else (3.0 - 4.0 * t)
 
 static func _save_wav(path: String, samples: PackedFloat32Array, sample_rate: int = 44100) -> void:
 	var num_samples := samples.size()
@@ -994,23 +1007,6 @@ static func _save_wav(path: String, samples: PackedFloat32Array, sample_rate: in
 
 static func _synth_shoot() -> PackedFloat32Array:
 	var sample_rate := 44100
-	var duration := 0.12
-	var count := int(sample_rate * duration)
-	var samples := PackedFloat32Array()
-	samples.resize(count)
-	
-	var phase := 0.0
-	for i in range(count):
-		var t := float(i) / float(sample_rate)
-		var progress := t / duration
-		var freq := lerpf(920.0, 240.0, progress)
-		phase += freq * (TAU / float(sample_rate))
-		var env := (1.0 - progress) * (1.0 - progress)
-		samples[i] = sin(phase) * env * 0.7
-	return samples
-
-static func _synth_hit() -> PackedFloat32Array:
-	var sample_rate := 44100
 	var duration := 0.10
 	var count := int(sample_rate * duration)
 	var samples := PackedFloat32Array()
@@ -1020,16 +1016,15 @@ static func _synth_hit() -> PackedFloat32Array:
 	for i in range(count):
 		var t := float(i) / float(sample_rate)
 		var progress := t / duration
-		var freq := lerpf(180.0, 60.0, progress)
+		var freq := lerpf(920.0, 220.0, progress)
 		phase += freq * (TAU / float(sample_rate))
-		var noise := randf_range(-1.0, 1.0)
-		var env := (1.0 - progress)
-		samples[i] = (sin(phase) * 0.5 + noise * 0.5) * env * 0.8
+		var env := (1.0 - progress) * (1.0 - progress)
+		samples[i] = _square_wave(phase, 0.5) * env * 0.65
 	return samples
 
-static func _synth_explosion() -> PackedFloat32Array:
+static func _synth_hit() -> PackedFloat32Array:
 	var sample_rate := 44100
-	var duration := 0.35
+	var duration := 0.08
 	var count := int(sample_rate * duration)
 	var samples := PackedFloat32Array()
 	samples.resize(count)
@@ -1038,12 +1033,31 @@ static func _synth_explosion() -> PackedFloat32Array:
 	for i in range(count):
 		var t := float(i) / float(sample_rate)
 		var progress := t / duration
-		var freq := lerpf(90.0, 30.0, progress)
+		var freq := lerpf(180.0, 50.0, progress)
+		phase += freq * (TAU / float(sample_rate))
+		var noise := randf_range(-1.0, 1.0)
+		var env := 1.0 - progress
+		var sq := _square_wave(phase, 0.5)
+		samples[i] = (sq * 0.45 + noise * 0.55) * env * 0.75
+	return samples
+
+static func _synth_explosion() -> PackedFloat32Array:
+	var sample_rate := 44100
+	var duration := 0.30
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		var progress := t / duration
+		var freq := lerpf(300.0, 35.0, progress)
 		phase += freq * (TAU / float(sample_rate))
 		var noise := randf_range(-1.0, 1.0)
 		var env := (1.0 - progress) * (1.0 - progress)
-		var s := (sin(phase) * 0.6 + noise * 0.4) * env * 0.9
-		samples[i] = s
+		var sq := _square_wave(phase, 0.5)
+		samples[i] = (sq * 0.4 + noise * 0.6) * env * 0.85
 	return samples
 
 static func _synth_gem_pickup() -> PackedFloat32Array:
@@ -1053,78 +1067,257 @@ static func _synth_gem_pickup() -> PackedFloat32Array:
 	var samples := PackedFloat32Array()
 	samples.resize(count)
 	
-	var phase1 := 0.0
-	var phase2 := 0.0
+	var notes := [1046.50, 1318.51, 1567.98] # C6, E6, G6
+	var note_dur := duration / float(notes.size())
+	
+	var phase := 0.0
 	for i in range(count):
 		var t := float(i) / float(sample_rate)
-		var progress := t / duration
-		phase1 += 1320.0 * (TAU / float(sample_rate))
-		phase2 += 1760.0 * (TAU / float(sample_rate))
-		var env := (1.0 - progress) * (1.0 - progress)
-		samples[i] = (sin(phase1) * 0.5 + sin(phase2) * 0.5) * env * 0.7
+		var note_idx := clampi(int(t / note_dur), 0, notes.size() - 1)
+		var note_t := fmod(t, note_dur)
+		var note_progress := note_t / note_dur
+		var env := (1.0 - note_progress * 0.8)
+		var freq: float = notes[note_idx]
+		phase += freq * (TAU / float(sample_rate))
+		samples[i] = _square_wave(phase, 0.25) * env * 0.65
 	return samples
 
 static func _synth_levelup() -> PackedFloat32Array:
 	var sample_rate := 44100
-	var duration := 0.60
+	var duration := 0.90
 	var count := int(sample_rate * duration)
 	var samples := PackedFloat32Array()
 	samples.resize(count)
 	
-	var notes := [523.25, 659.25, 783.99, 1046.50] # C5, E5, G5, C6
-	var note_dur := duration / float(notes.size())
-	
-	var phase := 0.0
-	for i in range(count):
-		var t := float(i) / float(sample_rate)
-		var note_idx := clampi(int(t / note_dur), 0, notes.size() - 1)
-		var note_t := fmod(t, note_dur)
-		var env := (1.0 - (note_t / note_dur) * 0.5)
-		var freq: float = notes[note_idx]
-		phase += freq * (TAU / float(sample_rate))
-		samples[i] = (sin(phase) * 0.6 + sin(phase * 2.0) * 0.2) * env * 0.75
-	return samples
-
-static func _synth_game_over() -> PackedFloat32Array:
-	var sample_rate := 44100
-	var duration := 0.80
-	var count := int(sample_rate * duration)
-	var samples := PackedFloat32Array()
-	samples.resize(count)
-	
-	var notes := [392.0, 311.13, 261.63, 196.0] # G4, Eb4, C4, G3
-	var note_dur := duration / float(notes.size())
-	
-	var phase := 0.0
-	for i in range(count):
-		var t := float(i) / float(sample_rate)
-		var note_idx := clampi(int(t / note_dur), 0, notes.size() - 1)
-		var note_t := fmod(t, note_dur)
-		var env := (1.0 - (note_t / note_dur) * 0.6)
-		var freq: float = notes[note_idx]
-		phase += freq * (TAU / float(sample_rate))
-		samples[i] = (sin(phase) * 0.7 + sin(phase * 0.5) * 0.3) * env * 0.7
-	return samples
-
-static func _synth_victory() -> PackedFloat32Array:
-	var sample_rate := 44100
-	var duration := 1.00
-	var count := int(sample_rate * duration)
-	var samples := PackedFloat32Array()
-	samples.resize(count)
-	
-	var notes := [523.25, 659.25, 783.99, 1046.50, 1318.51] # C5, E5, G5, C6, E6
-	var note_dur := 0.18
+	var melody := [523.25, 659.25, 783.99, 1046.50] # C5, E5, G5, C6
+	var step_dur := 0.14
+	var sustain_start := step_dur * float(melody.size())
 	
 	var phase1 := 0.0
 	var phase2 := 0.0
 	for i in range(count):
 		var t := float(i) / float(sample_rate)
-		var note_idx := clampi(int(t / note_dur), 0, notes.size() - 1)
-		var freq1: float = notes[note_idx]
-		var freq2: float = freq1 * 1.5
+		var freq1 := 1046.50
+		var freq2 := 783.99
+		var env := 1.0
+		
+		if t < sustain_start:
+			var note_idx := clampi(int(t / step_dur), 0, melody.size() - 1)
+			freq1 = melody[note_idx]
+			freq2 = freq1 * 0.75 # Lower fourth harmony
+			var note_t := fmod(t, step_dur)
+			env = 1.0 - (note_t / step_dur) * 0.3
+		else:
+			var sustain_t := t - sustain_start
+			var sustain_len := duration - sustain_start
+			env = 1.0 - (sustain_t / sustain_len)
+			# Add subtle 6Hz vibrato on finale
+			var vib := sin(sustain_t * 6.0 * TAU) * 8.0
+			freq1 = 1046.50 + vib
+			freq2 = 1318.51 + vib # Major third harmony
+			
 		phase1 += freq1 * (TAU / float(sample_rate))
 		phase2 += freq2 * (TAU / float(sample_rate))
-		var overall_env := 1.0 - (t / duration) * 0.4
-		samples[i] = (sin(phase1) * 0.5 + sin(phase2) * 0.3) * overall_env * 0.75
+		var v1 := _square_wave(phase1, 0.25)
+		var v2 := _square_wave(phase2, 0.5)
+		samples[i] = (v1 * 0.45 + v2 * 0.35) * env * 0.75
+	return samples
+
+static func _synth_player_hurt() -> PackedFloat32Array:
+	var sample_rate := 44100
+	var duration := 0.18
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		var progress := t / duration
+		var freq := lerpf(120.0, 50.0, progress)
+		# Add 40Hz buzz modulation
+		var buzz := sin(t * 40.0 * TAU) * 15.0
+		phase += (freq + buzz) * (TAU / float(sample_rate))
+		var noise := randf_range(-1.0, 1.0)
+		var env := (1.0 - progress) * (1.0 - progress)
+		var saw := _saw_wave(phase)
+		samples[i] = (saw * 0.6 + noise * 0.4) * env * 0.8
+	return samples
+
+static func _synth_boss_alarm() -> PackedFloat32Array:
+	var sample_rate := 44100
+	var duration := 1.40
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		# 8 Hz alternating siren warble between 440 Hz and 660 Hz
+		var lfo := _square_wave(t * 8.0 * TAU, 0.5)
+		var freq := 660.0 if lfo > 0.0 else 440.0
+		phase += freq * (TAU / float(sample_rate))
+		var env := 1.0 - (t / duration) * 0.2
+		var sq := _square_wave(phase, 0.35)
+		samples[i] = sq * env * 0.7
+	return samples
+
+static func _synth_game_over() -> PackedFloat32Array:
+	var sample_rate := 44100
+	var duration := 1.40
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var notes := [392.00, 311.13, 261.63, 196.00] # G4, Eb4, C4, G3
+	var note_dur := duration / float(notes.size())
+	
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		var note_idx := clampi(int(t / note_dur), 0, notes.size() - 1)
+		var note_t := fmod(t, note_dur)
+		var env := 1.0 - (note_t / note_dur) * 0.5
+		if note_idx == notes.size() - 1:
+			env = 1.0 - (note_t / note_dur) * 0.8
+		var freq: float = notes[note_idx]
+		var vib := sin(t * 5.0 * TAU) * 3.0
+		phase += (freq + vib) * (TAU / float(sample_rate))
+		var tri := _triangle_wave(phase)
+		var sq := _square_wave(phase, 0.5)
+		samples[i] = (tri * 0.6 + sq * 0.3) * env * 0.75
+	return samples
+
+static func _synth_victory() -> PackedFloat32Array:
+	var sample_rate := 44100
+	var duration := 1.50
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var melody := [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51] # C5, E5, G5, B5, C6, E6
+	var step_dur := 0.14
+	var sustain_start := step_dur * float(melody.size())
+	
+	var phase1 := 0.0
+	var phase2 := 0.0
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		var freq1 := 1046.50
+		var freq2 := 1567.98
+		var env := 1.0
+		
+		if t < sustain_start:
+			var note_idx := clampi(int(t / step_dur), 0, melody.size() - 1)
+			freq1 = melody[note_idx]
+			freq2 = freq1 * 1.5 # Fifth harmony
+			var note_t := fmod(t, step_dur)
+			env = 1.0 - (note_t / step_dur) * 0.25
+		else:
+			var sustain_t := t - sustain_start
+			var sustain_len := duration - sustain_start
+			env = 1.0 - (sustain_t / sustain_len) * 0.8
+			var vib := sin(sustain_t * 6.0 * TAU) * 6.0
+			freq1 = 1046.50 + vib
+			freq2 = 1567.98 + vib
+			
+		phase1 += freq1 * (TAU / float(sample_rate))
+		phase2 += freq2 * (TAU / float(sample_rate))
+		var v1 := _square_wave(phase1, 0.25)
+		var v2 := _square_wave(phase2, 0.5)
+		samples[i] = (v1 * 0.45 + v2 * 0.35) * env * 0.75
+	return samples
+
+static func _synth_retro_bgm() -> PackedFloat32Array:
+	var sample_rate := 44100
+	# 4 bars @ 128 BPM. 1 beat = 60/128 = 0.46875s. 1 bar (4 beats) = 1.875s. 4 bars = 7.5s
+	var duration := 7.5
+	var count := int(sample_rate * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	
+	var beat_dur := 60.0 / 128.0 # 0.46875s
+	var sixteenth_dur := beat_dur / 4.0 # 0.1171875s
+	var eighth_dur := beat_dur / 2.0 # 0.234375s
+	var bar_dur := beat_dur * 4.0 # 1.875s
+	
+	# Bass line notes per bar (8th notes, 8 notes per bar)
+	var bass_bar1 := [110.00, 110.00, 130.81, 110.00, 164.81, 110.00, 130.81, 164.81] # Am: A2, A2, C3, A2, E3, A2, C3, E3
+	var bass_bar2 := [87.31, 87.31, 110.00, 87.31, 130.81, 87.31, 110.00, 130.81]    # F:  F2, F2, A2, F2, C3, F2, A2, C3
+	var bass_bar3 := [73.42, 73.42, 87.31, 73.42, 110.00, 73.42, 87.31, 110.00]      # Dm: D2, D2, F2, D2, A2, D2, F2, A2
+	var bass_bar4 := [82.41, 82.41, 103.83, 82.41, 123.47, 82.41, 103.83, 123.47]    # E:  E2, E2, G#2, E2, B2, E2, G#2, B2
+	
+	# Arp patterns per bar (16th notes, 16 notes per bar)
+	var arp_bar1 := [440.0, 523.25, 659.25, 880.0, 440.0, 523.25, 659.25, 880.0, 440.0, 523.25, 659.25, 880.0, 659.25, 523.25, 440.0, 523.25] # Am
+	var arp_bar2 := [349.23, 440.0, 523.25, 698.46, 349.23, 440.0, 523.25, 698.46, 349.23, 440.0, 523.25, 698.46, 523.25, 440.0, 349.23, 440.0] # F
+	var arp_bar3 := [293.66, 349.23, 440.0, 587.33, 293.66, 349.23, 440.0, 587.33, 293.66, 349.23, 440.0, 587.33, 440.0, 349.23, 293.66, 349.23] # Dm
+	var arp_bar4 := [329.63, 415.30, 493.88, 659.25, 329.63, 415.30, 493.88, 659.25, 329.63, 415.30, 493.88, 659.25, 493.88, 415.30, 329.63, 415.30] # E
+	
+	var bass_phase := 0.0
+	var arp_phase := 0.0
+	var kick_phase := 0.0
+	
+	for i in range(count):
+		var t := float(i) / float(sample_rate)
+		var current_bar := clampi(int(t / bar_dur), 0, 3)
+		var bar_t := fmod(t, bar_dur)
+		
+		# 1. Bass Channel (8th notes)
+		var bass_note_idx := clampi(int(bar_t / eighth_dur), 0, 7)
+		var bass_t := fmod(bar_t, eighth_dur)
+		var bass_env := (1.0 - (bass_t / eighth_dur) * 0.7)
+		var bass_freq := 110.0
+		match current_bar:
+			0: bass_freq = bass_bar1[bass_note_idx]
+			1: bass_freq = bass_bar2[bass_note_idx]
+			2: bass_freq = bass_bar3[bass_note_idx]
+			3: bass_freq = bass_bar4[bass_note_idx]
+		bass_phase += bass_freq * (TAU / float(sample_rate))
+		var bass_sample := _square_wave(bass_phase, 0.5) * bass_env * 0.35
+		
+		# 2. Arp Channel (16th notes)
+		var arp_note_idx := clampi(int(bar_t / sixteenth_dur), 0, 15)
+		var arp_t := fmod(bar_t, sixteenth_dur)
+		var arp_env := (1.0 - (arp_t / sixteenth_dur) * 0.6)
+		var arp_freq := 440.0
+		match current_bar:
+			0: arp_freq = arp_bar1[arp_note_idx]
+			1: arp_freq = arp_bar2[arp_note_idx]
+			2: arp_freq = arp_bar3[arp_note_idx]
+			3: arp_freq = arp_bar4[arp_note_idx]
+		arp_phase += arp_freq * (TAU / float(sample_rate))
+		var arp_sample := _square_wave(arp_phase, 0.25) * arp_env * 0.22
+		
+		# 3. Percussion Channel (Drums)
+		var drum_sample := 0.0
+		var beat_idx := int(bar_t / beat_dur) % 4
+		var beat_t := fmod(bar_t, beat_dur)
+		
+		# Kick on beats 0 & 2 (beats 1 & 3 in musical terms)
+		if (beat_idx == 0 or beat_idx == 2) and beat_t < 0.12:
+			var kick_prog := beat_t / 0.12
+			var kick_freq := lerpf(120.0, 40.0, kick_prog)
+			kick_phase += kick_freq * (TAU / float(sample_rate))
+			var kick_env := (1.0 - kick_prog) * (1.0 - kick_prog)
+			drum_sample += sin(kick_phase) * kick_env * 0.4
+			
+		# Snare on beats 1 & 3 (beats 2 & 4)
+		if (beat_idx == 1 or beat_idx == 3) and beat_t < 0.15:
+			var snare_prog := beat_t / 0.15
+			var snare_env := (1.0 - snare_prog) * (1.0 - snare_prog)
+			var snare_noise := randf_range(-1.0, 1.0)
+			drum_sample += snare_noise * snare_env * 0.25
+			
+		# Hi-hat on every 8th note
+		var hat_t := fmod(bar_t, eighth_dur)
+		if hat_t < 0.04:
+			var hat_prog := hat_t / 0.04
+			var hat_env := 1.0 - hat_prog
+			var hat_noise := randf_range(-1.0, 1.0)
+			drum_sample += hat_noise * hat_env * 0.12
+			
+		# Master output clamp
+		samples[i] = clampf(bass_sample + arp_sample + drum_sample, -1.0, 1.0)
+		
 	return samples

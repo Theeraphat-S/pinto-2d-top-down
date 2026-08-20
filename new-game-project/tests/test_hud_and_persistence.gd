@@ -249,12 +249,14 @@ func test_main_scene_instantiation_and_camera_clamping() -> void:
 	assert_not_null(main_node.get_node_or_null("Arena"), "Arena present in Main scene")
 	assert_not_null(main_node.get_node_or_null("Player"), "Player present in Main scene")
 	assert_not_null(main_node.get_node_or_null("Camera2D"), "Camera2D present in Main scene")
+	assert_not_null(main_node.get_node_or_null("Spawner"), "Spawner present in Main scene")
 	assert_not_null(main_node.get_node_or_null("HUD"), "HUD present in Main scene")
 	assert_not_null(main_node.get_node_or_null("UpgradeMenu"), "UpgradeMenu present in Main scene")
 	assert_not_null(main_node.get_node_or_null("VictoryScreen"), "VictoryScreen present in Main scene")
 	assert_not_null(main_node.get_node_or_null("GameOverScreen"), "GameOverScreen present in Main scene")
 	
 	var cam: Camera2D = main_node.get_node("Camera2D") as Camera2D
+	assert_eq(cam.zoom, Vector2(2.5, 2.5), "Camera zoom is Vector2(2.5, 2.5)")
 	assert_eq(cam.limit_left, 0, "Camera left limit is 0")
 	assert_eq(cam.limit_top, 0, "Camera top limit is 0")
 	assert_eq(cam.limit_right, 1280, "Camera right limit is 1280")

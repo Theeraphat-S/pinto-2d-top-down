@@ -1,4 +1,4 @@
-extends Node
+extends SceneTree
 
 # ==============================================================================
 # PINTO 2D TOP-DOWN SURVIVAL ARENA - M5 VERIFICATION SUITE
@@ -8,7 +8,7 @@ extends Node
 var passed_count: int = 0
 var failed_count: int = 0
 
-func _ready() -> void:
+func _init() -> void:
 	print("\n============================================================")
 	print("   PINTO 2D SURVIVAL ARENA — M5 VERIFICATION SUITE")
 	print("============================================================\n")
@@ -20,9 +20,9 @@ func _ready() -> void:
 	print("============================================================\n")
 	
 	if failed_count > 0:
-		get_tree().quit(1)
+		quit(1)
 	else:
-		get_tree().quit(0)
+		quit(0)
 
 func _assert(condition: bool, message: String) -> void:
 	if condition:
@@ -221,7 +221,7 @@ func test_main_scene() -> void:
 
 func test_save_manager_integration() -> void:
 	print(">> Testing SaveManager Roundtrip & Stats Aggregation...")
-	var sm = get_node_or_null("/root/SaveManager")
+	var sm = root.get_node_or_null("SaveManager") if root else null
 	if not sm:
 		print("  [SKIP] SaveManager singleton not active in standalone unit run")
 		return

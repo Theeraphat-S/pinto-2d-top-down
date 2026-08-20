@@ -68,6 +68,11 @@ Pinto 2D Top-Down Survival Arena is built in Godot 4.7.2 using a clean component
 | 37 | E2E Suite: Roguelite & Upgrades | Automated headless tests for R3 XP curve, 3-card draft, stat modifications | M_E2E | R6 |
 | 38 | E2E Suite: Arena & Collisions | Automated headless tests for R4 bounds, obstacle collisions, Y-sorting | M_E2E | R6 |
 | 39 | E2E Suite: HUD & Save Persistence | Automated headless tests for R5 save/load roundtrips, score tracking, win/loss triggers | M_E2E | R6 |
+| 40 | Crisp Viewport Scaling & Camera2D Zoom | Stretch mode `canvas_items`, aspect `keep`, 2.5x camera zoom smoothly tracking Pinto within arena bounds without gray borders | M7 | Follow-up R1 |
+| 41 | Device 0 Input Map Actions | `project.godot` input map actions (move_left, move_right, move_up, move_down, pause, select) set to device 0 / -1 for WASD & Arrow keys | M7 | Follow-up R2 |
+| 42 | Spawner Main Scene Integration | `spawner.tscn` instanced in `main.tscn` wiring GameState/EventBus so waves 1-5 and Boss spawn on game start | M7 | Follow-up R3 |
+| 43 | Retro Chiptune Audio & SFX System | `AudioManager` autoload playing 8-bit/16-bit sound effects (shoot, hit, death, gem, levelup, hurt, boss alarm, victory, game over) & looping BGM | M7 | Follow-up R4 |
+| 44 | Test Regression Suite & GitHub Sync | Headless test execution, zero regressions, and git commit/push | M7 | Follow-up R5 |
 
 ---
 
@@ -81,6 +86,7 @@ Pinto 2D Top-Down Survival Arena is built in Godot 4.7.2 using a clean component
 | M4 | Enemies, 5 Waves, Boss & XP Magnetics | 4 enemy archetypes, 5-wave budget spawner, 3-phase Wave 5 Boss ("GIGA-NULL"), XP gems & magnet attraction | M1, M2, M3 | DONE |
 | M5 | Roguelite Upgrades, HUD & Game Lifecycle | Quadratic XP leveling, 3-card upgrade draft modal, 10 upgrade cards, real-time HUD, Victory/Game Over modals, save persistence | M1, M2, M4 | DONE |
 | M6 | Final Integration & Test Pass (Tiers 1-5) | 100% E2E test pass (Tiers 1-4) + Tier 5 Adversarial Coverage Hardening + Forensic Audit PASS | M_E2E, M5 | DONE |
+| M7 | Polish, Resolution/Camera, Input, Spawner & Chiptune Audio | R1 Viewport/Camera2D 2.5x/HUD, R2 device 0 input fix, R3 spawner integration in main, R4 AudioManager chiptune SFX/BGM, R5 headless tests & git sync | M6 | DONE |
 
 ---
 
