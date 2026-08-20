@@ -158,7 +158,7 @@ func apply_upgrade(card_id: String) -> void:
 	if UpgradeCatalog:
 		UpgradeCatalog.apply_card(card_id)
 
-func _on_enemy_killed(_enemy_type: String, score_val: int) -> void:
+func _on_enemy_killed(_enemy_type: String, _score_val: int) -> void:
 	# Avoid double counting if record_kill was used directly
 	pass
 

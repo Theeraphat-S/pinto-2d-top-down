@@ -140,7 +140,7 @@ func _on_quit_pressed() -> void:
 
 func format_timer(seconds: float) -> String:
 	var total_sec: int = int(floor(max(0.0, seconds)))
-	var mins: int = total_sec / 60
+	var mins: int = int(float(total_sec) / 60.0)
 	var secs: int = total_sec % 60
 	return "%02d:%02d" % [mins, secs]
 

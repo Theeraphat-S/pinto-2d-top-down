@@ -85,7 +85,6 @@ func _fire_projectile() -> void:
 		
 	var proj: Node = PROJECTILE_SCENE.instantiate()
 	if proj:
-		spawn_container.add_child(proj)
 		var dir := (target_player.global_position - global_position).normalized()
 		if dir.length_squared() == 0.0:
 			dir = Vector2.RIGHT
@@ -93,3 +92,4 @@ func _fire_projectile() -> void:
 			proj.init(global_position, dir, projectile_damage, projectile_speed)
 		elif proj is Node2D:
 			proj.global_position = global_position
+		spawn_container.call_deferred("add_child", proj)

@@ -13,9 +13,9 @@ var failed_count: int = 0
 
 const ARENA_WIDTH: float = 1280.0
 const ARENA_HEIGHT: float = 720.0
-const VIEWPORT_WIDTH: float = 1920.0
-const VIEWPORT_HEIGHT: float = 1080.0
-const CAMERA_ZOOM: float = 2.5
+const VIEWPORT_WIDTH: float = 640.0
+const VIEWPORT_HEIGHT: float = 360.0
+const CAMERA_ZOOM: float = 1.0
 
 func _init() -> void:
 	print("\n============================================================")
@@ -72,30 +72,30 @@ func _run_all_challenges() -> void:
 func challenge_camera_mathematical_proof() -> void:
 	print(">> [CHALLENGE 1.1] Mathematical Proof of Zero Gray Borders & Full Arena Clamping...")
 	
-	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM   # 1920 / 2.5 = 768
-	var visible_h: float = VIEWPORT_HEIGHT / CAMERA_ZOOM  # 1080 / 2.5 = 432
-	var half_w: float = visible_w * 0.5                  # 384
-	var half_h: float = visible_h * 0.5                  # 216
+	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM   # 640 / 1.0 = 640
+	var visible_h: float = VIEWPORT_HEIGHT / CAMERA_ZOOM  # 360 / 1.0 = 360
+	var half_w: float = visible_w * 0.5                  # 320
+	var half_h: float = visible_h * 0.5                  # 180
 	
-	_assert_almost_eq(visible_w, 768.0, 0.001, "Visible world width is exactly 768.0 px")
-	_assert_almost_eq(visible_h, 432.0, 0.001, "Visible world height is exactly 432.0 px")
-	_assert_almost_eq(half_w, 384.0, 0.001, "Camera half-width is 384.0 px")
-	_assert_almost_eq(half_h, 216.0, 0.001, "Camera half-height is 216.0 px")
+	_assert_almost_eq(visible_w, 640.0, 0.001, "Visible world width is exactly 640.0 px")
+	_assert_almost_eq(visible_h, 360.0, 0.001, "Visible world height is exactly 360.0 px")
+	_assert_almost_eq(half_w, 320.0, 0.001, "Camera half-width is 320.0 px")
+	_assert_almost_eq(half_h, 180.0, 0.001, "Camera half-height is 180.0 px")
 	
 	# Mathematical check that visible area fits entirely within arena dimensions
-	_assert(visible_w <= ARENA_WIDTH, "Visible width (768) <= Arena width (1280)")
-	_assert(visible_h <= ARENA_HEIGHT, "Visible height (432) <= Arena height (720)")
+	_assert(visible_w <= ARENA_WIDTH, "Visible width (640) <= Arena width (1280)")
+	_assert(visible_h <= ARENA_HEIGHT, "Visible height (360) <= Arena height (720)")
 	
 	# Valid camera center bounds given limits [0, 0, 1280, 720]
-	var min_center_x: float = 0.0 + half_w       # 384
-	var max_center_x: float = ARENA_WIDTH - half_w # 1280 - 384 = 896
-	var min_center_y: float = 0.0 + half_h       # 216
-	var max_center_y: float = ARENA_HEIGHT - half_h # 720 - 216 = 504
+	var min_center_x: float = 0.0 + half_w       # 320
+	var max_center_x: float = ARENA_WIDTH - half_w # 1280 - 320 = 960
+	var min_center_y: float = 0.0 + half_h       # 180
+	var max_center_y: float = ARENA_HEIGHT - half_h # 720 - 180 = 540
 	
-	_assert_almost_eq(min_center_x, 384.0, 0.001, "Min clamped camera center X is 384.0 px")
-	_assert_almost_eq(max_center_x, 896.0, 0.001, "Max clamped camera center X is 896.0 px")
-	_assert_almost_eq(min_center_y, 216.0, 0.001, "Min clamped camera center Y is 216.0 px")
-	_assert_almost_eq(max_center_y, 504.0, 0.001, "Max clamped camera center Y is 504.0 px")
+	_assert_almost_eq(min_center_x, 320.0, 0.001, "Min clamped camera center X is 320.0 px")
+	_assert_almost_eq(max_center_x, 960.0, 0.001, "Max clamped camera center X is 960.0 px")
+	_assert_almost_eq(min_center_y, 180.0, 0.001, "Min clamped camera center Y is 180.0 px")
+	_assert_almost_eq(max_center_y, 540.0, 0.001, "Max clamped camera center Y is 540.0 px")
 
 func challenge_camera_empirical_positions() -> void:
 	print(">> [CHALLENGE 1.2] Empirical Camera Rect at Extreme & Corner Player Positions...")
@@ -141,7 +141,7 @@ func challenge_camera_empirical_positions() -> void:
 	
 	var cam: Camera2D = main_node.get_node("Camera2D") as Camera2D
 	_assert(cam != null, "Camera2D node exists in Main scene")
-	_assert_eq(cam.zoom, Vector2(2.5, 2.5), "Camera zoom is exactly (2.5, 2.5)")
+	_assert_eq(cam.zoom, Vector2(1.0, 1.0), "Camera zoom is exactly (1.0, 1.0)")
 	_assert_eq(cam.limit_left, 0, "Camera limit_left is 0")
 	_assert_eq(cam.limit_top, 0, "Camera limit_top is 0")
 	_assert_eq(cam.limit_right, 1280, "Camera limit_right is 1280")

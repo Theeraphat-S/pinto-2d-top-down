@@ -151,6 +151,11 @@ func collect(_collector: Node2D = null) -> void:
 		return
 	_is_collected = true
 	
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+	
 	# Award XP to GameState
 	if game_state:
 		game_state.add_xp(xp_value)
@@ -169,6 +174,8 @@ func _play_pickup_sfx() -> void:
 		var sfx := AudioStreamPlayer2D.new()
 		sfx.stream = stream
 		sfx.global_position = global_position
-		get_parent().add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		get_parent().call_deferred("add_child", sfx)
+		sfx.tree_entered.connect(func():
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
+		)

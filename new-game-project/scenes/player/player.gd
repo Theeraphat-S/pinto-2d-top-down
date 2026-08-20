@@ -198,7 +198,6 @@ func _fire_projectiles(target: Variant) -> void:
 		var proj_dir: Vector2 = Vector2.RIGHT.rotated(angle)
 		var proj: Node = PROJECTILE_SCENE.instantiate()
 		if proj:
-			spawn_parent.add_child(proj)
 			if proj.has_method("init"):
 				proj.init(
 					global_position,
@@ -209,6 +208,9 @@ func _fire_projectiles(target: Variant) -> void:
 					game_state.crit_chance if game_state else 0.05,
 					game_state.crit_multiplier if game_state else 1.5
 				)
+			elif proj is Node2D:
+				proj.global_position = global_position
+			spawn_parent.call_deferred("add_child", proj)
 			
 	# SFX and Global Event
 	if shoot_sfx and shoot_sfx.stream:

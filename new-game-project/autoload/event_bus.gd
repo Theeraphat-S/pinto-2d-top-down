@@ -1,5 +1,7 @@
 extends Node
 
+@warning_ignore("unused_signal")
+
 # ==============================================================================
 # PINTO 2D TOP-DOWN SURVIVAL ARENA - GLOBAL EVENT BUS
 # Centralized, decoupled signal routing for all gameplay subsystems.

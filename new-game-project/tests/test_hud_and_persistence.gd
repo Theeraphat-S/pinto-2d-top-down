@@ -7,7 +7,7 @@ const TEST_SAVE_PATH: String = "user://test_save_data.json"
 # Helper for timer string formatting
 func format_timer(seconds: float) -> String:
 	var total_sec: int = int(floor(max(0.0, seconds)))
-	var mins: int = total_sec / 60
+	var mins: int = int(float(total_sec) / 60.0)
 	var secs: int = total_sec % 60
 	return "%02d:%02d" % [mins, secs]
 
@@ -256,7 +256,7 @@ func test_main_scene_instantiation_and_camera_clamping() -> void:
 	assert_not_null(main_node.get_node_or_null("GameOverScreen"), "GameOverScreen present in Main scene")
 	
 	var cam: Camera2D = main_node.get_node("Camera2D") as Camera2D
-	assert_eq(cam.zoom, Vector2(2.5, 2.5), "Camera zoom is Vector2(2.5, 2.5)")
+	assert_eq(cam.zoom, Vector2(1.0, 1.0), "Camera zoom is Vector2(1.0, 1.0)")
 	assert_eq(cam.limit_left, 0, "Camera left limit is 0")
 	assert_eq(cam.limit_top, 0, "Camera top limit is 0")
 	assert_eq(cam.limit_right, 1280, "Camera right limit is 1280")

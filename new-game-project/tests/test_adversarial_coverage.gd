@@ -272,7 +272,7 @@ func test_multishot_spread_odd_counts_symmetry() -> void:
 		assert_eq(angles.size(), count, "Odd count %d returns exact array size" % count)
 		
 		# Center projectile must align with base_angle
-		var mid_idx: int = int(count / 2)
+		var mid_idx: int = int(count / 2.0)
 		assert_almost_eq(angles[mid_idx], base_angle, 0.0001, "Count %d center projectile at base angle" % count)
 		
 		# Symmetrical pairs around center

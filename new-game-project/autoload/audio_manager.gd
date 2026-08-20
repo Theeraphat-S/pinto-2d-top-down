@@ -148,7 +148,7 @@ func _on_upgrade_selected(_card_id: String) -> void:
 	play_ui_select()
 	restore_bgm()
 
-func _on_player_health_changed(current_hp: float, max_hp: float) -> void:
+func _on_player_health_changed(current_hp: float, _max_hp: float) -> void:
 	if current_hp < _prev_player_health and current_hp > 0.0:
 		play_player_hurt()
 	_prev_player_health = current_hp
@@ -365,7 +365,7 @@ func get_stream(sound_name: String) -> AudioStream:
 		var wav := stream as AudioStreamWAV
 		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		wav.loop_begin = 0
-		wav.loop_end = wav.data.size() / 2
+		wav.loop_end = int(wav.data.size() / 2.0)
 		
 	if stream:
 		_audio_cache[key] = stream

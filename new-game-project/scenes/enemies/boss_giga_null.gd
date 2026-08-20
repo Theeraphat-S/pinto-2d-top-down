@@ -121,11 +121,11 @@ func _fire_radial_ring(count: int, proj_speed: float, base_angle: float = 0.0) -
 		var dir := Vector2.RIGHT.rotated(angle)
 		var proj: Node = proj_scene.instantiate()
 		if proj:
-			container.add_child(proj)
 			if proj.has_method("init"):
 				proj.init(global_position, dir, 8.0, proj_speed)
 			elif proj is Node2D:
 				proj.global_position = global_position
+			container.call_deferred("add_child", proj)
 
 # ==============================================================================
 # PHASE 2 BEHAVIOR: Enraged Speed + Minion Adds + 3 Rapid Targeted Bursts
@@ -169,9 +169,9 @@ func _spawn_minion_adds() -> void:
 			var minion: Node = minion_scene.instantiate()
 			if minion:
 				var offset := Vector2(randf_range(-60.0, 60.0), randf_range(-60.0, 60.0))
-				container.add_child(minion)
 				if minion is Node2D:
 					minion.global_position = global_position + offset
+				container.call_deferred("add_child", minion)
 
 func _fire_targeted_shot() -> void:
 	if target_player == null or not is_instance_valid(target_player):
@@ -187,7 +187,6 @@ func _fire_targeted_shot() -> void:
 		
 	var proj: Node = proj_scene.instantiate()
 	if proj:
-		container.add_child(proj)
 		var dir := (target_player.global_position - global_position).normalized()
 		if dir.length_squared() == 0.0:
 			dir = Vector2.RIGHT
@@ -195,6 +194,7 @@ func _fire_targeted_shot() -> void:
 			proj.init(global_position, dir, 10.0, 240.0)
 		elif proj is Node2D:
 			proj.global_position = global_position
+		container.call_deferred("add_child", proj)
 
 # ==============================================================================
 # PHASE 3 BEHAVIOR: Desperation Charge Dash + Rotating Spiral Bullet Hell
@@ -264,11 +264,11 @@ func _fire_spiral_orb() -> void:
 	var dir := Vector2.RIGHT.rotated(_p3_spiral_angle)
 	var proj: Node = proj_scene.instantiate()
 	if proj:
-		container.add_child(proj)
 		if proj.has_method("init"):
 			proj.init(global_position, dir, 8.0, 190.0)
 		elif proj is Node2D:
 			proj.global_position = global_position
+		container.call_deferred("add_child", proj)
 
 # ==============================================================================
 # DAMAGE & PHASE TRANSITIONS
@@ -337,8 +337,10 @@ func die() -> void:
 		var sfx := AudioStreamPlayer2D.new()
 		sfx.stream = stream
 		sfx.global_position = global_position
-		container.add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		container.call_deferred("add_child", sfx)
+		sfx.tree_entered.connect(func():
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
+		)
 		
 	super.die()

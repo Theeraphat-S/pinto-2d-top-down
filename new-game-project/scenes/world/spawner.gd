@@ -171,18 +171,18 @@ func spawn_enemy(enemy_type: String, custom_pos: Vector2 = Vector2.ZERO) -> Node
 	if enemy == null:
 		return null
 		
-	var container := _get_entities_container()
-	if container:
-		container.add_child(enemy)
-	else:
-		add_child(enemy)
-		
 	var spawn_pos: Vector2 = custom_pos
 	if spawn_pos == Vector2.ZERO:
 		spawn_pos = _get_outside_viewport_spawn_pos()
 		
 	if enemy is Node2D:
 		enemy.global_position = spawn_pos
+		
+	var container := _get_entities_container()
+	if container:
+		container.call_deferred("add_child", enemy)
+	else:
+		call_deferred("add_child", enemy)
 		
 	return enemy as Node2D
 
@@ -200,7 +200,6 @@ func _spawn_boss() -> void:
 		
 	var boss: Node = boss_scene.instantiate()
 	if boss:
-		container.add_child(boss)
 		_boss_instance = boss as Node2D
 		
 		# Place boss at top or center-top of arena
@@ -210,6 +209,8 @@ func _spawn_boss() -> void:
 			_boss_instance.global_position = bounds.position + Vector2(bounds.size.x * 0.5, 80.0)
 		else:
 			_boss_instance.global_position = Vector2(640.0, 160.0)
+			
+		container.call_deferred("add_child", boss)
 			
 		if event_bus:
 			event_bus.boss_spawned.emit(_boss_instance)

@@ -212,16 +212,16 @@ func _spawn_xp_gems() -> void:
 	if gem_scene == null:
 		return
 		
-	for i in range(drop_gem_count):
+	for _i in range(drop_gem_count):
 		var gem: Node = gem_scene.instantiate()
 		if gem:
-			container.add_child(gem)
 			var offset := Vector2(randf_range(-8.0, 8.0), randf_range(-8.0, 8.0)) if drop_gem_count > 1 else Vector2.ZERO
+			var drop_pos := global_position + offset
 			if gem.has_method("setup"):
-				gem.setup(drop_gem_tier, global_position + offset)
-			else:
-				if gem is Node2D:
-					gem.global_position = global_position + offset
+				gem.setup(drop_gem_tier, drop_pos)
+			elif gem is Node2D:
+				gem.global_position = drop_pos
+			container.call_deferred("add_child", gem)
 
 func _get_spawn_container() -> Node:
 	if not is_inside_tree():
@@ -248,9 +248,11 @@ func _play_death_sfx() -> void:
 		var sfx := AudioStreamPlayer2D.new()
 		sfx.stream = stream
 		sfx.global_position = global_position
-		container.add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		container.call_deferred("add_child", sfx)
+		sfx.tree_entered.connect(func():
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
+		)
 
 func is_alive() -> bool:
 	return not is_dead and current_health > 0.0

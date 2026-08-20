@@ -92,12 +92,18 @@ func _play_hit_sfx() -> void:
 		var sfx := AudioStreamPlayer2D.new()
 		sfx.stream = stream
 		sfx.global_position = global_position
-		get_parent().add_child(sfx)
-		sfx.play()
-		sfx.finished.connect(sfx.queue_free)
+		get_parent().call_deferred("add_child", sfx)
+		sfx.tree_entered.connect(func():
+			sfx.play()
+			sfx.finished.connect(sfx.queue_free)
+		)
 
 func _destroy() -> void:
 	if _is_destroyed:
 		return
 	_is_destroyed = true
+	if collision_shape:
+		collision_shape.set_deferred("disabled", true)
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
 	queue_free()

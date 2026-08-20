@@ -12,9 +12,9 @@ extends "res://tests/test_framework.gd"
 
 const ARENA_WIDTH: float = 1280.0
 const ARENA_HEIGHT: float = 720.0
-const VIEWPORT_WIDTH: float = 1920.0
-const VIEWPORT_HEIGHT: float = 1080.0
-const CAMERA_ZOOM: float = 2.5
+const VIEWPORT_WIDTH: float = 640.0
+const VIEWPORT_HEIGHT: float = 360.0
+const CAMERA_ZOOM: float = 1.0
 
 const HUDScene = preload("res://scenes/ui/hud.tscn")
 const MainScene = preload("res://scenes/main.tscn")
@@ -25,19 +25,19 @@ const ArenaScene = preload("res://scenes/world/arena.tscn")
 # ==============================================================================
 
 func test_camera_visible_extent_and_half_dimensions() -> void:
-	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM   # 1920 / 2.5 = 768
-	var visible_h: float = VIEWPORT_HEIGHT / CAMERA_ZOOM  # 1080 / 2.5 = 432
-	var half_w: float = visible_w * 0.5                  # 384
-	var half_h: float = visible_h * 0.5                  # 216
+	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM   # 640 / 1.0 = 640
+	var visible_h: float = VIEWPORT_HEIGHT / CAMERA_ZOOM  # 360 / 1.0 = 360
+	var half_w: float = visible_w * 0.5                  # 320
+	var half_h: float = visible_h * 0.5                  # 180
 	
-	assert_almost_eq(visible_w, 768.0, 0.001, "Visible world width is 768px (1920 / 2.5)")
-	assert_almost_eq(visible_h, 432.0, 0.001, "Visible world height is 432px (1080 / 2.5)")
-	assert_almost_eq(half_w, 384.0, 0.001, "Camera half-width is 384px")
-	assert_almost_eq(half_h, 216.0, 0.001, "Camera half-height is 216px")
+	assert_almost_eq(visible_w, 640.0, 0.001, "Visible world width is 640px (640 / 1.0)")
+	assert_almost_eq(visible_h, 360.0, 0.001, "Visible world height is 360px (360 / 1.0)")
+	assert_almost_eq(half_w, 320.0, 0.001, "Camera half-width is 320px")
+	assert_almost_eq(half_h, 180.0, 0.001, "Camera half-height is 180px")
 	
 	# Verify that visible world extent is strictly smaller than arena dimensions
-	assert_true(visible_w < ARENA_WIDTH, "Visible width (768) < Arena width (1280)")
-	assert_true(visible_h < ARENA_HEIGHT, "Visible height (432) < Arena height (720)")
+	assert_true(visible_w < ARENA_WIDTH, "Visible width (640) < Arena width (1280)")
+	assert_true(visible_h < ARENA_HEIGHT, "Visible height (360) < Arena height (720)")
 
 func test_camera_clamped_center_limits() -> void:
 	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM
@@ -50,10 +50,10 @@ func test_camera_clamped_center_limits() -> void:
 	var min_cy: float = 0.0 + half_h
 	var max_cy: float = ARENA_HEIGHT - half_h
 	
-	assert_almost_eq(min_cx, 384.0, 0.001, "Min clamped camera center X is 384px")
-	assert_almost_eq(max_cx, 896.0, 0.001, "Max clamped camera center X is 896px")
-	assert_almost_eq(min_cy, 216.0, 0.001, "Min clamped camera center Y is 216px")
-	assert_almost_eq(max_cy, 504.0, 0.001, "Max clamped camera center Y is 504px")
+	assert_almost_eq(min_cx, 320.0, 0.001, "Min clamped camera center X is 320px")
+	assert_almost_eq(max_cx, 960.0, 0.001, "Max clamped camera center X is 960px")
+	assert_almost_eq(min_cy, 180.0, 0.001, "Min clamped camera center Y is 180px")
+	assert_almost_eq(max_cy, 540.0, 0.001, "Max clamped camera center Y is 540px")
 
 # ==============================================================================
 # 2. CAMERA2D VISIBLE RECT ACROSS EXTREME PLAYER POSITIONS (CORNERS & EDGES)
@@ -71,10 +71,10 @@ func test_camera_visible_rect_four_corners() -> void:
 	var max_cy: float = ARENA_HEIGHT - half_h
 	
 	var corners := [
-		{"name": "Top-Left (0, 0)", "pos": Vector2(0.0, 0.0), "expected_left": 0.0, "expected_top": 0.0, "expected_right": 768.0, "expected_bottom": 432.0},
-		{"name": "Top-Right (1280, 0)", "pos": Vector2(1280.0, 0.0), "expected_left": 512.0, "expected_top": 0.0, "expected_right": 1280.0, "expected_bottom": 432.0},
-		{"name": "Bottom-Left (0, 720)", "pos": Vector2(0.0, 720.0), "expected_left": 0.0, "expected_top": 288.0, "expected_right": 768.0, "expected_bottom": 720.0},
-		{"name": "Bottom-Right (1280, 720)", "pos": Vector2(1280.0, 720.0), "expected_left": 512.0, "expected_top": 288.0, "expected_right": 1280.0, "expected_bottom": 720.0},
+		{"name": "Top-Left (0, 0)", "pos": Vector2(0.0, 0.0), "expected_left": 0.0, "expected_top": 0.0, "expected_right": 640.0, "expected_bottom": 360.0},
+		{"name": "Top-Right (1280, 0)", "pos": Vector2(1280.0, 0.0), "expected_left": 640.0, "expected_top": 0.0, "expected_right": 1280.0, "expected_bottom": 360.0},
+		{"name": "Bottom-Left (0, 720)", "pos": Vector2(0.0, 720.0), "expected_left": 0.0, "expected_top": 360.0, "expected_right": 640.0, "expected_bottom": 720.0},
+		{"name": "Bottom-Right (1280, 720)", "pos": Vector2(1280.0, 720.0), "expected_left": 640.0, "expected_top": 360.0, "expected_right": 1280.0, "expected_bottom": 720.0},
 	]
 	
 	for c in corners:
@@ -148,7 +148,7 @@ func test_main_scene_camera_node_configuration() -> void:
 	
 	var cam: Camera2D = main_node.get_node_or_null("Camera2D") as Camera2D
 	assert_not_null(cam, "Camera2D node exists in main scene")
-	assert_eq(cam.zoom, Vector2(2.5, 2.5), "Camera zoom is exactly Vector2(2.5, 2.5)")
+	assert_eq(cam.zoom, Vector2(1.0, 1.0), "Camera zoom is exactly Vector2(1.0, 1.0)")
 	assert_eq(cam.limit_left, 0, "Camera limit_left is 0")
 	assert_eq(cam.limit_top, 0, "Camera limit_top is 0")
 	assert_eq(cam.limit_right, 1280, "Camera limit_right is 1280")

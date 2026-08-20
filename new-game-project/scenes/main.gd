@@ -37,7 +37,7 @@ func _configure_camera() -> void:
 	if not camera:
 		return
 		
-	camera.zoom = Vector2(2.5, 2.5)
+	camera.zoom = Vector2(1.0, 1.0)
 	# Clamping camera limits to arena bounds (1280x720)
 	if arena and arena.has_method("get_arena_bounds"):
 		var bounds: Rect2 = arena.get_arena_bounds()

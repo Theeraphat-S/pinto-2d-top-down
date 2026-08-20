@@ -137,7 +137,7 @@ func test_audio_manager_procedural_synthesis_all_10_items_buffer_verification() 
 		assert_gt(raw_bytes.size(), 0, "'%s' raw byte data is non-empty" % key)
 		assert_eq(raw_bytes.size() % 2, 0, "'%s' raw byte size is even (16-bit aligned)" % key)
 		
-		var sample_count: int = raw_bytes.size() / 2
+		var sample_count: int = int(float(raw_bytes.size()) / 2.0)
 		var duration_sec: float = float(sample_count) / 44100.0
 		assert_gte(duration_sec, min_dur, "'%s' duration (%.2fs) >= min_dur (%.2fs)" % [key, duration_sec, min_dur])
 		assert_lte(duration_sec, max_dur, "'%s' duration (%.2fs) <= max_dur (%.2fs)" % [key, duration_sec, max_dur])
@@ -161,8 +161,8 @@ func test_audio_manager_procedural_synthesis_all_10_items_buffer_verification() 
 			var normalized := float(sample_val) / 32768.0
 			sum_sq += normalized * normalized
 			
-		var inspected_count: int = (sample_count + step - 1) / step
-		assert_gt(non_zero_count, inspected_count / 10, "'%s' contains active audio data (not silence)" % key)
+		var inspected_count: int = int(float(sample_count + step - 1) / float(step))
+		assert_gt(non_zero_count, int(float(inspected_count) / 10.0), "'%s' contains active audio data (not silence)" % key)
 		assert_gte(min_sample, -32768, "'%s' min PCM sample >= -32768" % key)
 		assert_lte(max_sample, 32767, "'%s' max PCM sample <= 32767" % key)
 		
