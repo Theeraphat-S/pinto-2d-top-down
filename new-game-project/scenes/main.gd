@@ -76,10 +76,22 @@ func _process(delta: float) -> void:
 	if _trauma > 0.0 and camera:
 		_trauma = maxf(0.0, _trauma - delta * _shake_decay)
 		var shake_amount := pow(_trauma, _trauma_power) * _max_shake_offset
-		camera.offset = Vector2(
+		var raw_offset := Vector2(
 			randf_range(-1.0, 1.0) * shake_amount,
 			randf_range(-1.0, 1.0) * shake_amount
 		)
+		var bounds := Rect2(0.0, 0.0, 1280.0, 720.0)
+		if arena and arena.has_method("get_arena_bounds"):
+			bounds = arena.get_arena_bounds()
+		var vp_rect := get_viewport_rect()
+		var zoom_val: Vector2 = camera.zoom if (camera.zoom.x > 0.0 and camera.zoom.y > 0.0) else Vector2.ONE
+		var half_vp := (vp_rect.size / zoom_val) * 0.5
+		var desired_pos := camera.global_position + raw_offset
+		var clamped_pos := Vector2(
+			clampf(desired_pos.x, bounds.position.x + half_vp.x, maxf(bounds.position.x + half_vp.x, bounds.end.x - half_vp.x)),
+			clampf(desired_pos.y, bounds.position.y + half_vp.y, maxf(bounds.position.y + half_vp.y, bounds.end.y - half_vp.y))
+		)
+		camera.offset = clamped_pos - camera.global_position
 	elif camera and camera.offset != Vector2.ZERO:
 		camera.offset = Vector2.ZERO
 
@@ -87,10 +99,12 @@ func _on_screen_shake_requested(trauma_intensity: float, _duration: float) -> vo
 	_trauma = clampf(_trauma + trauma_intensity, 0.0, 1.0)
 
 func _on_hit_stop_requested(duration: float) -> void:
+	if duration <= 0.0 or not is_inside_tree() or get_tree() == null:
+		return
 	if Engine.time_scale < 1.0:
 		return
 	Engine.time_scale = 0.05
-	var timer := get_tree().create_timer(duration * 0.05, true, false, true)
+	var timer := get_tree().create_timer(duration, true, false, true)
 	await timer.timeout
 	Engine.time_scale = 1.0
 

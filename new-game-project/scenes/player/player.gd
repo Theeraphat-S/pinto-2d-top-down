@@ -22,6 +22,12 @@ const DASH_DURATION: float = 0.18
 const DASH_COOLDOWN: float = 1.8
 const AFTERIMAGE_INTERVAL: float = 0.04
 
+# Weapon Registry (ADR 0001)
+const WEAPON_REGISTRY: Dictionary = {
+	"weapon_plasma": "res://scenes/weapons/orbiting_plasma.tscn",
+	"weapon_thunder": "res://scenes/weapons/thunder_strike.tscn"
+}
+
 # State variables
 var is_dead: bool = false
 var is_invulnerable: bool = false
@@ -102,7 +108,7 @@ func _physics_process(delta: float) -> void:
 		
 	# Dash input check
 	if not is_dashing and can_dash():
-		if Input.is_action_just_pressed("dash") or Input.is_action_just_pressed("select"):
+		if Input.is_action_just_pressed("dash") or Input.is_action_just_pressed("select") or Input.is_action_just_pressed("ui_accept"):
 			start_dash()
 			
 	var current_speed: float = game_state.move_speed if game_state else 160.0
@@ -458,12 +464,7 @@ func equip_or_upgrade_weapon(weapon_id: String) -> Node:
 			w.rank += 1
 		return w
 	else:
-		var scene_path := ""
-		if weapon_id == "weapon_plasma":
-			scene_path = "res://scenes/weapons/orbiting_plasma.tscn"
-		elif weapon_id == "weapon_thunder":
-			scene_path = "res://scenes/weapons/thunder_strike.tscn"
-			
+		var scene_path: String = WEAPON_REGISTRY.get(weapon_id, "")
 		if scene_path != "":
 			var packed := load(scene_path) as PackedScene
 			if packed:

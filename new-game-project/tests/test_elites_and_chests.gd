@@ -19,6 +19,21 @@ func test_enemy_base_is_elite_default_and_flags() -> void:
 	assert_true(slime.is_elite, "is_elite can be set to true")
 	slime.free()
 
+func test_enemy_base_make_elite() -> void:
+	var slime = ENEMY_SLIME_SCENE.instantiate()
+	assert_not_null(slime, "Enemy slime instantiates")
+	assert_false(slime.is_elite, "Default is_elite is false")
+	
+	slime.make_elite(3.5, 5, 1.5)
+	assert_true(slime.is_elite, "make_elite sets is_elite true")
+	assert_almost_eq(slime.scale.x, 1.5, 0.01, "Scale X is 1.5")
+	assert_almost_eq(slime.scale.y, 1.5, 0.01, "Scale Y is 1.5")
+	assert_almost_eq(slime.max_health, 25.0 * 3.5, 0.01, "Max health multiplied by 3.5")
+	assert_almost_eq(slime.current_health, slime.max_health, 0.01, "Current health refilled to max")
+	assert_eq(slime.score_value, 10 * 5, "Score value multiplied by 5")
+	assert_eq(slime.base_modulate, Color(1.35, 1.15, 0.4, 1.0), "Gold modulate applied")
+	slime.free()
+
 func test_treasure_chest_structure_and_collision() -> void:
 	var chest = CHEST_SCENE.instantiate()
 	assert_not_null(chest, "TreasureChest scene instantiates")

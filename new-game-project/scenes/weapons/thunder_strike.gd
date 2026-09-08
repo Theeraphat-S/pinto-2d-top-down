@@ -1,64 +1,59 @@
 class_name ThunderStrike
-extends Node2D
+extends WeaponBase
 
 # ==============================================================================
-# PINTO 2D TOP-DOWN SURVIVAL ARENA - THUNDER STRIKE WEAPON SUBSYSTEM
+# PINTO 2D TOP-DOWN SURVIVAL ARENA - THUNDER STRIKE WEAPON SUBSYSTEM (ADR 0001)
 # Periodically discharges targeted lightning bolts from above on nearby enemies.
+# Conforms to standardized WeaponBase contract.
 # ==============================================================================
-
-@export var rank: int = 1:
-	set(val):
-		rank = clampi(val, 1, 3)
-		_update_stats_for_rank()
 
 var strike_interval: float = 1.8
 var strike_count: int = 1
-var base_damage: float = 35.0
 var range_radius: float = 240.0
 var aoe_radius: float = 28.0
 
 var _timer: float = 0.0
 var _active_bolts: Array[Dictionary] = [] # {points: Array[Vector2], alpha: float}
 
-var game_state: Node:
-	get:
-		if is_inside_tree() and get_tree() and get_tree().root.has_node("GameState"):
-			return get_tree().root.get_node("GameState")
-		return null
-
-var event_bus: Node:
-	get:
-		if is_inside_tree() and get_tree() and get_tree().root.has_node("EventBus"):
-			return get_tree().root.get_node("EventBus")
-		return null
+func _init() -> void:
+	weapon_id = "weapon_thunder"
+	weapon_name = "Thunder Strike"
+	max_rank = 3
+	base_damage = 35.0
+	base_cooldown = 1.8
 
 func _ready() -> void:
 	z_index = 20
+	_update_stats_for_rank()
+
+func _on_rank_changed() -> void:
 	_update_stats_for_rank()
 
 func _update_stats_for_rank() -> void:
 	match rank:
 		1:
 			strike_interval = 1.8
+			base_cooldown = 1.8
 			strike_count = 1
 			base_damage = 35.0
 		2:
 			strike_interval = 1.5
+			base_cooldown = 1.5
 			strike_count = 2
 			base_damage = 48.0
 		3:
 			strike_interval = 1.2
+			base_cooldown = 1.2
 			strike_count = 3
 			base_damage = 65.0
 
-func _physics_process(delta: float) -> void:
+func tick(delta: float) -> void:
 	_timer += delta
-	var cd_mult: float = (game_state.attack_cooldown / 0.5) if game_state else 1.0
-	var effective_interval := maxf(0.3, strike_interval * cd_mult)
+	var effective_interval := get_effective_cooldown()
 	
 	if _timer >= effective_interval:
 		_timer = 0.0
-		_discharge_lightning()
+		fire()
 		
 	# Fade active visual bolts
 	if not _active_bolts.is_empty():
@@ -69,6 +64,17 @@ func _physics_process(delta: float) -> void:
 				remaining.append(bolt)
 		_active_bolts = remaining
 		queue_redraw()
+
+func fire() -> void:
+	_discharge_lightning()
+
+func get_stats() -> Dictionary:
+	var s := super.get_stats()
+	s["strike_count"] = strike_count
+	s["strike_interval"] = strike_interval
+	s["range_radius"] = range_radius
+	s["aoe_radius"] = aoe_radius
+	return s
 
 func _discharge_lightning() -> void:
 	if not is_inside_tree():
@@ -94,9 +100,7 @@ func _discharge_lightning() -> void:
 		
 	valid_targets.shuffle()
 	var targets_to_hit := mini(strike_count, valid_targets.size())
-	
-	var dmg_mult: float = (game_state.attack_damage / 20.0) if game_state else 1.0
-	var final_dmg: float = base_damage * dmg_mult
+	var final_dmg := get_effective_damage()
 	
 	for i in range(targets_to_hit):
 		var target := valid_targets[i]

@@ -147,18 +147,10 @@ func _process(delta: float) -> void:
 func _spawn_elite_enemy(enemy_type: String) -> Node2D:
 	var enemy := spawn_enemy(enemy_type)
 	if enemy:
-		if "is_elite" in enemy:
+		if enemy.has_method("make_elite"):
+			enemy.make_elite()
+		elif "is_elite" in enemy:
 			enemy.is_elite = true
-		enemy.scale = Vector2(1.5, 1.5)
-		if "max_health" in enemy:
-			enemy.max_health *= 3.5
-			enemy.current_health = enemy.max_health
-		if "score_value" in enemy:
-			enemy.score_value *= 5
-		if "base_modulate" in enemy:
-			enemy.base_modulate = Color(1.35, 1.15, 0.4, 1.0)
-			if "sprite" in enemy and enemy.sprite:
-				enemy.sprite.modulate = enemy.base_modulate
 		if event_bus:
 			event_bus.elite_spawned.emit(enemy)
 			event_bus.screen_shake_requested.emit(0.3, 0.25)

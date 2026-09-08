@@ -65,6 +65,17 @@ func _ensure_nodes() -> void:
 	if death_sfx == null:
 		death_sfx = get_node_or_null("DeathSFX") as AudioStreamPlayer2D
 
+func make_elite(hp_mult: float = 3.5, score_mult: int = 5, scale_factor: float = 1.5) -> void:
+	_ensure_nodes()
+	is_elite = true
+	scale = Vector2(scale_factor, scale_factor)
+	max_health *= hp_mult
+	current_health = max_health
+	score_value *= score_mult
+	base_modulate = Color(1.35, 1.15, 0.4, 1.0)
+	if sprite:
+		sprite.modulate = base_modulate
+
 func _init() -> void:
 	add_to_group("enemies")
 	y_sort_enabled = true
@@ -279,7 +290,7 @@ func die() -> void:
 		event_bus.enemy_killed.emit(enemy_type, score_value)
 		
 	if event_bus:
-		var shake_intensity: float = 0.35 if ("is_elite" in self and self.is_elite) else 0.08
+		var shake_intensity: float = 0.35 if is_elite else 0.08
 		event_bus.screen_shake_requested.emit(shake_intensity, 0.15)
 		
 	# Play SFX
@@ -296,9 +307,7 @@ func _spawn_death_burst() -> void:
 		var burst: Node = burst_scene.instantiate()
 		if burst:
 			if burst.has_method("init"):
-				var burst_color: Color = Color(1.0, 0.85, 0.3)
-				if "is_elite" in self and self.is_elite:
-					burst_color = Color(1.0, 0.5, 1.0)
+				var burst_color: Color = Color(1.0, 0.5, 1.0) if is_elite else Color(1.0, 0.85, 0.3)
 				burst.init(global_position, burst_color)
 			elif burst is Node2D:
 				burst.global_position = global_position

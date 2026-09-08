@@ -110,6 +110,9 @@ func _spawn_popup() -> void:
 				popup.global_position = global_position + Vector2(0, -16)
 			if popup.has_method("setup"):
 				popup.setup(500, true, global_position + Vector2(0, -16))
+				var lbl = popup.get_node_or_null("Label")
+				if lbl and lbl is Label:
+					lbl.text = "+500"
 			if container.is_inside_tree():
 				container.call_deferred("add_child", popup)
 			else:

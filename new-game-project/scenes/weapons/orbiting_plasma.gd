@@ -1,35 +1,34 @@
 class_name OrbitingPlasma
-extends Node2D
+extends WeaponBase
 
 # ==============================================================================
-# PINTO 2D TOP-DOWN SURVIVAL ARENA - ORBITING PLASMA WEAPON SUBSYSTEM
+# PINTO 2D TOP-DOWN SURVIVAL ARENA - ORBITING PLASMA WEAPON SUBSYSTEM (ADR 0001)
 # 2 to 4 plasma orbs rotating around Pinto, dealing contact damage & knockback.
+# Conforms to standardized WeaponBase contract.
 # ==============================================================================
-
-@export var rank: int = 1:
-	set(val):
-		rank = clampi(val, 1, 3)
-		_update_stats_for_rank()
 
 var orb_count: int = 2
 var radius: float = 46.0
 var rotation_speed: float = 2.8 # rad / sec
-var base_damage: float = 14.0
 
 var _current_angle: float = 0.0
-var _hit_cooldowns: Dictionary = {} # enemy (Node/int) -> time remaining
+var _hit_cooldowns: Dictionary = {} # enemy instance_id -> time remaining
 var _orbs: Array[Area2D] = []
 
-var game_state: Node:
-	get:
-		if is_inside_tree() and get_tree() and get_tree().root.has_node("GameState"):
-			return get_tree().root.get_node("GameState")
-		return null
+func _init() -> void:
+	weapon_id = "weapon_plasma"
+	weapon_name = "Orbiting Plasma"
+	max_rank = 3
+	base_damage = 14.0
+	base_cooldown = 0.35
 
 func _ready() -> void:
 	z_index = 10
 	_update_stats_for_rank()
 	_rebuild_orbs()
+
+func _on_rank_changed() -> void:
+	_update_stats_for_rank()
 
 func _update_stats_for_rank() -> void:
 	match rank:
@@ -74,7 +73,7 @@ func _rebuild_orbs() -> void:
 		add_child(area)
 		_orbs.append(area)
 
-func _physics_process(delta: float) -> void:
+func tick(delta: float) -> void:
 	_current_angle = fmod(_current_angle + rotation_speed * delta, TAU)
 	
 	# Clean up hit cooldowns
@@ -99,11 +98,22 @@ func _physics_process(delta: float) -> void:
 		
 		var bodies := orb.get_overlapping_bodies()
 		for body in bodies:
-			_try_damage_target(body, orb.global_position)
+			_try_damage_target(body)
 			
 	queue_redraw()
 
-func _try_damage_target(target: Node, orb_pos: Vector2) -> void:
+func fire() -> void:
+	# Manual/Triggered attack impulse: momentarily accelerate orbit rotation
+	rotation_speed += 1.5
+
+func get_stats() -> Dictionary:
+	var s := super.get_stats()
+	s["orb_count"] = orb_count
+	s["radius"] = radius
+	s["rotation_speed"] = rotation_speed
+	return s
+
+func _try_damage_target(target: Node) -> void:
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		return
 		
@@ -115,16 +125,14 @@ func _try_damage_target(target: Node, orb_pos: Vector2) -> void:
 	if not enemy_node.has_method("take_damage"):
 		return
 		
-	var instance_id = enemy_node.get_instance_id()
+	var instance_id := enemy_node.get_instance_id()
 	if _hit_cooldowns.has(instance_id):
 		return
 		
-	# Apply damage
-	var dmg_mult: float = (game_state.attack_damage / 20.0) if game_state else 1.0
-	var final_dmg: float = base_damage * dmg_mult
-	
+	# Apply effective damage via WeaponBase utility
+	var final_dmg := get_effective_damage()
 	enemy_node.take_damage(final_dmg, false)
-	_hit_cooldowns[instance_id] = 0.35 # Cooldown per enemy in seconds
+	_hit_cooldowns[instance_id] = base_cooldown
 	
 	# Apply slight outward knockback
 	if enemy_node.has_method("apply_knockback"):
