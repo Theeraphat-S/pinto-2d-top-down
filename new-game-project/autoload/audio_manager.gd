@@ -836,4 +836,3 @@ func _synth_chest() -> PackedFloat32Array:
 		var sq := _square_wave(phase, 0.3)
 		samples[i] = sq * env * 0.7
 	return samples
-
