@@ -38,9 +38,12 @@
 | M2 | Physics Query Flushing Fix | scenes/enemies/enemy_base.gd, xp_gem.gd, boss_giga_null.gd, projectile.gd | none | DONE |
 | M3 | GDScript Warnings Cleanup | autoload/event_bus.gd, autoload/audio_manager.gd, autoload/game_state.gd | none | DONE |
 | M4 | Initial Verification & Push | Run test runner, git push origin/main | M1, M2, M3 | DONE |
-| M5 | Enemy Sprite Animation (R1) | enemy_base.tscn, enemy_slime.tscn, enemy_bat.tscn, enemy_drone.tscn, enemy_golem.tscn, boss_giga_null.tscn, enemy_base.gd, boss_giga_null.gd, enemy_*.gd | M1-M4 | IN_PROGRESS |
-| M6 | Floating Damage Numbers (R2) | scenes/ui/damage_number.tscn, scenes/ui/damage_number.gd, enemy_base.gd | M5 | IN_PROGRESS |
-| M7 | Test Suite & Git Push (R3) | tests/test_enemy_animations_and_damage_popups.gd, test_runner.gd, git push | M5, M6 | PLANNED |
+| M5 | Enemy Sprite Animation (R1) | enemy_base.tscn, enemy_slime.tscn, enemy_bat.tscn, enemy_drone.tscn, enemy_golem.tscn, boss_giga_null.tscn | M1-M4 | DONE |
+| M6 | Floating Damage Numbers (R2) | scenes/ui/damage_number.tscn, scenes/ui/damage_number.gd, enemy_base.gd | M5 | DONE |
+| M7 | Test Suite & Git Push (R3) | tests/test_enemy_animations_and_damage_popups.gd, test_runner.gd, git push | M5, M6 | DONE |
+| M8 | Mobility & Juice (Phase 1) | Active Dash (Spacebar), Afterimage Ghost Trail, Screen Shake, CPUParticles2D Death Bursts, Hit-Stop | M7 | DONE |
+| M9 | Modular Weapons (Phase 2) | Orbiting Plasma, Thunder Strike, Weapon Subsystems, UpgradeCatalog integration | M8 | DONE |
+| M10 | Elite Encounters & Rewards (Phase 3) | Mid-Wave Elite Enemies (W2-4), Treasure Chests, Reward Modal, Test Suite verification | M9 | DONE |
 
 ## Code Layout
 - `new-game-project/scenes/enemies/`:

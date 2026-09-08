@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://tr3asur3ch3st01"]
+
+[ext_resource type="Script" path="res://scenes/pickups/treasure_chest.gd" id="1_chest"]
+[ext_resource type="Texture2D" path="res://assets/sprites/pickups/xp_large.png" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 16.0
+
+[node name="TreasureChest" type="Area2D"]
+z_index = 15
+collision_layer = 32
+collision_mask = 2
+script = ExtResource("1_chest")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1.5, 1.25, 0.2, 1)
+texture_filter = 1
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")

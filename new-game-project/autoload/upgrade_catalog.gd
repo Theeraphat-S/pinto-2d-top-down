@@ -10,6 +10,18 @@ enum Rarity { COMMON = 0, RARE = 1, EPIC = 2, LEGENDARY = 3 }
 
 var _cards: Dictionary = {}
 
+var game_state: Node:
+	get:
+		if is_inside_tree() and get_tree() and get_tree().root.has_node("GameState"):
+			return get_tree().root.get_node("GameState")
+		return null
+
+var event_bus: Node:
+	get:
+		if is_inside_tree() and get_tree() and get_tree().root.has_node("EventBus"):
+			return get_tree().root.get_node("EventBus")
+		return null
+
 func _ready() -> void:
 	_register_all_cards()
 
@@ -125,6 +137,28 @@ func _register_all_cards() -> void:
 		"icon": "res://assets/ui/icons/icon_crit.png",
 		"apply_fn": Callable(self, "_apply_crit")
 	})
+	
+	_add_card({
+		"id": "weapon_plasma",
+		"title": "Orbiting Plasma",
+		"description": "Summon rotating plasma spheres to damage contacting foes",
+		"rarity": Rarity.RARE,
+		"weight": 55,
+		"max_rank": 3,
+		"icon": "res://assets/ui/icons/icon_multishot.png",
+		"apply_fn": Callable(self, "_apply_weapon_plasma")
+	})
+	
+	_add_card({
+		"id": "weapon_thunder",
+		"title": "Thunder Strike",
+		"description": "Call down lightning bolts on nearby enemies periodically",
+		"rarity": Rarity.RARE,
+		"weight": 55,
+		"max_rank": 3,
+		"icon": "res://assets/ui/icons/icon_attack_speed.png",
+		"apply_fn": Callable(self, "_apply_weapon_thunder")
+	})
 
 func _add_card(card: Dictionary) -> void:
 	_cards[card.id] = card
@@ -146,8 +180,8 @@ func get_random_upgrade_cards(count: int = 3) -> Array[Dictionary]:
 	
 	for card in _cards.values():
 		var current_rank: int = 0
-		if GameState and GameState.active_upgrades.has(card.id):
-			current_rank = GameState.active_upgrades[card.id]
+		if game_state and game_state.active_upgrades.has(card.id):
+			current_rank = game_state.active_upgrades[card.id]
 			
 		if current_rank < card.max_rank:
 			var card_copy: Dictionary = card.duplicate()
@@ -205,54 +239,62 @@ func apply_card(card_id: String) -> void:
 		var card: Dictionary = _cards[card_id]
 		if card.has("apply_fn") and card.apply_fn.is_valid():
 			card.apply_fn.call()
-		EventBus.upgrade_selected.emit(card_id)
+		if event_bus:
+			event_bus.upgrade_selected.emit(card_id)
 	elif card_id == "emergency_heal":
 		_apply_emergency_heal()
-		EventBus.upgrade_selected.emit(card_id)
+		if event_bus:
+			event_bus.upgrade_selected.emit(card_id)
 
 func _apply_dmg_up() -> void:
-	if GameState:
-		GameState.attack_damage += GameState.BASE_ATTACK_DAMAGE * 0.20
+	if game_state:
+		game_state.attack_damage += game_state.BASE_ATTACK_DAMAGE * 0.20
 
 func _apply_atk_spd() -> void:
-	if GameState:
+	if game_state:
 		# Reduce interval (increase attacks/sec) by 20%
-		GameState.attack_cooldown = maxf(0.08, GameState.attack_cooldown * 0.80)
+		game_state.attack_cooldown = maxf(0.08, game_state.attack_cooldown * 0.80)
 
 func _apply_mov_spd() -> void:
-	if GameState:
-		GameState.move_speed += GameState.BASE_MOVE_SPEED * 0.15
+	if game_state:
+		game_state.move_speed += game_state.BASE_MOVE_SPEED * 0.15
 
 func _apply_max_hp() -> void:
-	if GameState:
-		GameState.max_health += 25.0
-		GameState.heal(25.0)
+	if game_state:
+		game_state.max_health += 25.0
+		game_state.heal(25.0)
 
 func _apply_multi_shot() -> void:
-	if GameState:
-		GameState.projectile_count += 1
+	if game_state:
+		game_state.projectile_count += 1
 
 func _apply_pierce() -> void:
-	if GameState:
-		GameState.projectile_pierce += 1
+	if game_state:
+		game_state.projectile_pierce += 1
 
 func _apply_range() -> void:
-	if GameState:
-		GameState.attack_range += GameState.BASE_ATTACK_RANGE * 0.25
+	if game_state:
+		game_state.attack_range += game_state.BASE_ATTACK_RANGE * 0.25
 
 func _apply_magnet() -> void:
-	if GameState:
-		GameState.magnet_radius += GameState.BASE_MAGNET_RADIUS * 0.40
+	if game_state:
+		game_state.magnet_radius += game_state.BASE_MAGNET_RADIUS * 0.40
 
 func _apply_regen() -> void:
-	if GameState:
-		GameState.health_regen += 1.0
+	if game_state:
+		game_state.health_regen += 1.0
 
 func _apply_crit() -> void:
-	if GameState:
-		GameState.crit_chance += 0.10
-		GameState.crit_multiplier += 0.25
+	if game_state:
+		game_state.crit_chance += 0.10
+		game_state.crit_multiplier += 0.25
 
 func _apply_emergency_heal() -> void:
-	if GameState:
-		GameState.heal(35.0)
+	if game_state:
+		game_state.heal(35.0)
+
+func _apply_weapon_plasma() -> void:
+	pass
+
+func _apply_weapon_thunder() -> void:
+	pass

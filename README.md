@@ -26,15 +26,19 @@
 
 ## ✨ ฟีเจอร์หลัก (Key Features)
 
-- 🤖 **Responsive 8-Directional Kinematics**: ควบคุมน้อง Pinto เคลื่อนที่ได้อย่างอิสระ 8 ทิศทาง พร้อมแอนิเมชัน Pixel Art 4 สถานะ (`idle`, `walk`, `hurt`, `death`)
-- 🎯 **Auto-Attack Combat System**: ตรวจจับและยิงกระสุนใส่มอนสเตอร์ที่ใกล้ที่สุดอัตโนมัติ (รองรับ Multi-shot, Bullet Pierce, Attack Speed)
-- 💥 **Floating Damage Numbers**: ตัวเลขดาเมจลอยขึ้นเหนือหัวมอนสเตอร์เมื่อถูกโจมตี (ตัวเลขสีขาวสำหรับ Hit ปกติ และสีทองสำหรับ Critical Hit)
-- 👾 **5-Wave Escalation & Multi-Phase Boss**:
+- 🤖 **Responsive 8-Directional Kinematics & Active Dash**: ควบคุมน้อง Pinto เคลื่อนที่ได้อย่างอิสระ 8 ทิศทาง พร้อมระบบ **Active Dash (`Spacebar` / `Shift`)** พุ่งตัวความเร็วสูง 2.8x เป็นอมตะ 0.18s และทิ้งเงา Ghost Afterimage สีฟ้าไซเบอร์
+- 🎯 **Multi-Weapon Arsenal Subsystem**: นอกจากปืนกลหลักอัตโนมัติ ยังมีอาวุธเสริมให้เลือกสร้าง Build:
+  - 🔮 **Orbiting Plasma**: ลูกแก้วพลังงาน 2-4 ลูกหมุนรอบตัวสร้างเกราะป้องกันและผลักศัตรู
+  - ⚡ **Thunder Strike**: เรียกสายฟ้าฟาดจากฟ้าใส่ศัตรูสุ่มรอบตัวสร้างดาเมจแบบ AoE
+- 💥 **Visceral Juice & Game Feel**: กล้องสั่นตามแรงปะทะ (**Procedural Screen Shake**), ระเบิดสะเก็ดไฟพิกเซลเมื่อศัตรูตาย (**CPUParticles2D Death Burst**), และหยุดชะงักเฟรมเล็กน้อยเมื่อติดคริติคอล (**Hit-Stop Micro Pause**)
+- 👾 **5-Wave Escalation & Elite Mini-Bosses**:
   - **4 มอนสเตอร์พื้นฐาน**: `Slime` (ดึ๋งๆ อึด), `Bat` (กระพือปีกบินไว), `Drone` (ลอยยิงกระสุนสวน), `Golem` (เดินย่างสามขุมชนหนัก)
+  - 👑 **Mid-Wave Elite Encounters (Wave 2-4)**: มอนสเตอร์ตัวใหญ่พิเศษมีออร่าสีทอง เลือดหนา เมื่อกำจัดได้จะดรอป **Treasure Chest**
+  - 🎁 **Treasure Chest**: เดินแตะหีบทองเพื่อรับการ์ดอัปเกรดฟรีทันที 1 ใบ + ฮีล 20 HP + โบนัส 500 แต้ม
   - **Wave 5 Boss ("Giga Null")**: บอสใหญ่ 3 Phase พร้อมท่ายิงวงแหวน พุ่งชนแบบ Telegraphed และเรียกลูกสมุน
-- 🃏 **Roguelite Upgrade Cards**: สะสม Gem XP เพื่อเลเวลอัปและสุ่มการ์ด 3 ใบจากทั้งหมด 10 สายพลัง (เช่น เพิ่มจำนวนกระสุน, ทะลวงเกราะ, ฮีลฉุกเฉิน, ขยายรัศมีแม่เหล็ก)
+- 🃏 **Roguelite Upgrade Cards**: สะสม Gem XP เพื่อเลเวลอัปและสุ่มการ์ด 3 ใบจากทั้งสายพลัง Stat และสายอาวุธเสริม
 - 🗺️ **True Top-Down 2D Viewport**: ความละเอียดฐาน 640x360 ขยายเต็มหน้าจอ 1080p/1440p/4K คมชัด ไม่มีขอบดำ พร้อมระบบ Y-Sorting จัดลำดับความลึก
-- 🔊 **Retro Chiptune Polyphonic Audio**: ระบบเสียงสังเคราะห์ 16-Bit ครบวงจร (เสียงยิง, ชน, สไลม์ตาย, เก็บ Gem, เลเวลอัป, บอสเตือนภัย และเพลง BGM วนลูป)
+- 🔊 **Retro Chiptune Polyphonic Audio**: ระบบเสียงสังเคราะห์ 16-Bit ครบวงจร ทั้งเสียงยิง, ชน, สไลม์ตาย, แดช, ฟ้าผ่า, ลูกแก้วพลาสมา, เปิดหีบสมบัติ และเพลง BGM วนลูป
 - 💾 **Score & Data Persistence**: ระบบบันทึกคะแนนสูงสุด (High Score) และเวลาเอาชีวิตรอดลงไฟล์ JSON อัตโนมัติ
 
 ---
@@ -44,7 +48,8 @@
 | ปุ่มกด (Key) | คำสั่ง (Action) |
 | :--- | :--- |
 | **`W / A / S / D`** หรือ **`ปุ่มลูกศร`** | เดิน 8 ทิศทาง (Move Pinto) |
-| **`อัตโนมัติ (Auto)`** | โจมตีมอนสเตอร์ที่ใกล้ที่สุด (Auto-Attack) |
+| **`Spacebar / Shift`** | แดชพุ่งตัวหลบหลีกฉุกเฉิน (Active Dash with I-frames) |
+| **`อัตโนมัติ (Auto)`** | โจมตีมอนสเตอร์ที่ใกล้ที่สุด (Auto-Attack & Subsystem Weapons) |
 | **`อัตโนมัติ (Auto)`** | แม่เหล็กดูด Gem XP เข้าหาตัว (XP Magnet) |
 | **`Spacebar / คลิกเมาส์`** | เลือกการ์ดอัปเกรดเมื่อเลเวลอัป (Select Upgrade) |
 | **`Esc / P`** | หยุดเกมชั่วคราว (Pause Game) |

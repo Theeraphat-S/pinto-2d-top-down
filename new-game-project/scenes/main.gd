@@ -15,9 +15,23 @@ extends Node2D
 @onready var game_over_screen: CanvasLayer = $GameOverScreen
 @onready var spawner: Node2D = get_node_or_null("Spawner")
 
+var _trauma: float = 0.0
+var _trauma_power: float = 2.0
+var _max_shake_offset: float = 12.0
+var _shake_decay: float = 3.2
+
 func _ready() -> void:
 	_initialize_game()
 	_configure_camera()
+	_connect_event_bus()
+
+func _connect_event_bus() -> void:
+	var eb = get_node_or_null("/root/EventBus")
+	if eb:
+		if not eb.screen_shake_requested.is_connected(_on_screen_shake_requested):
+			eb.screen_shake_requested.connect(_on_screen_shake_requested)
+		if not eb.hit_stop_requested.is_connected(_on_hit_stop_requested):
+			eb.hit_stop_requested.connect(_on_hit_stop_requested)
 
 func _initialize_game() -> void:
 	if get_tree():
@@ -57,6 +71,28 @@ func _configure_camera() -> void:
 func _physics_process(_delta: float) -> void:
 	if player and is_instance_valid(player) and camera:
 		camera.global_position = player.global_position
+
+func _process(delta: float) -> void:
+	if _trauma > 0.0 and camera:
+		_trauma = maxf(0.0, _trauma - delta * _shake_decay)
+		var shake_amount := pow(_trauma, _trauma_power) * _max_shake_offset
+		camera.offset = Vector2(
+			randf_range(-1.0, 1.0) * shake_amount,
+			randf_range(-1.0, 1.0) * shake_amount
+		)
+	elif camera and camera.offset != Vector2.ZERO:
+		camera.offset = Vector2.ZERO
+
+func _on_screen_shake_requested(trauma_intensity: float, _duration: float) -> void:
+	_trauma = clampf(_trauma + trauma_intensity, 0.0, 1.0)
+
+func _on_hit_stop_requested(duration: float) -> void:
+	if Engine.time_scale < 1.0:
+		return
+	Engine.time_scale = 0.05
+	var timer := get_tree().create_timer(duration * 0.05, true, false, true)
+	await timer.timeout
+	Engine.time_scale = 1.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):

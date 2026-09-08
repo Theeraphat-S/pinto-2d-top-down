@@ -17,7 +17,10 @@ const SUITE_PATHS: Array[String] = [
 	"res://tests/test_adversarial_stress.gd",
 	"res://tests/test_adversarial_coverage.gd",
 	"res://tests/test_enemy_animations_and_damage_popups.gd",
-	"res://tests/test_combat_stress_and_boundary_conditions.gd"
+	"res://tests/test_combat_stress_and_boundary_conditions.gd",
+	"res://tests/test_dash_and_juice.gd",
+	"res://tests/test_modular_weapons.gd",
+	"res://tests/test_elites_and_chests.gd"
 ]
 
 func _init() -> void:

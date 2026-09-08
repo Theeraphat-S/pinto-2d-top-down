@@ -48,6 +48,12 @@ const WAVE_CONFIGS := {
 	}
 }
 
+const ELITE_CONFIGS := {
+	2: {"enemy": "slime", "trigger_time": 17.5},
+	3: {"enemy": "bat",   "trigger_time": 20.0},
+	4: {"enemy": "golem", "trigger_time": 22.5}
+}
+
 @export var is_active: bool = true
 @export var current_wave: int = 1
 
@@ -56,6 +62,7 @@ var _spawn_timer: float = 0.0
 var _boss_instance: Node2D = null
 var _is_boss_defeated: bool = false
 var _wave_in_progress: bool = false
+var _elite_spawned_for_wave: Dictionary = {}
 
 # Autoload accessors with safe fallback
 var game_state: Node:
@@ -92,6 +99,7 @@ func _start_wave(wave_num: int) -> void:
 	current_wave = wave_num
 	_wave_in_progress = true
 	_spawn_timer = 0.0
+	_elite_spawned_for_wave[current_wave] = false
 	
 	if game_state:
 		game_state.current_wave = current_wave
@@ -121,12 +129,40 @@ func _process(delta: float) -> void:
 				_complete_current_wave()
 				return
 				
+		# Check Elite Mini-Boss Trigger at Wave Midpoint
+		if ELITE_CONFIGS.has(current_wave) and not _elite_spawned_for_wave.get(current_wave, false):
+			var elite_cfg: Dictionary = ELITE_CONFIGS[current_wave]
+			var trigger_time: float = elite_cfg.get("trigger_time", 20.0)
+			if wave_time_remaining <= trigger_time:
+				_elite_spawned_for_wave[current_wave] = true
+				_spawn_elite_enemy(elite_cfg.get("enemy", "slime"))
+				
 	# 2. Periodic Enemy Spawning
 	var interval: float = config.get("spawn_interval", 1.5)
 	_spawn_timer += delta
 	if _spawn_timer >= interval:
 		_spawn_timer = 0.0
 		_spawn_wave_enemy(config)
+
+func _spawn_elite_enemy(enemy_type: String) -> Node2D:
+	var enemy := spawn_enemy(enemy_type)
+	if enemy:
+		if "is_elite" in enemy:
+			enemy.is_elite = true
+		enemy.scale = Vector2(1.5, 1.5)
+		if "max_health" in enemy:
+			enemy.max_health *= 3.5
+			enemy.current_health = enemy.max_health
+		if "score_value" in enemy:
+			enemy.score_value *= 5
+		if "base_modulate" in enemy:
+			enemy.base_modulate = Color(1.35, 1.15, 0.4, 1.0)
+			if "sprite" in enemy and enemy.sprite:
+				enemy.sprite.modulate = enemy.base_modulate
+		if event_bus:
+			event_bus.elite_spawned.emit(enemy)
+			event_bus.screen_shake_requested.emit(0.3, 0.25)
+	return enemy
 
 func _complete_current_wave() -> void:
 	if event_bus:

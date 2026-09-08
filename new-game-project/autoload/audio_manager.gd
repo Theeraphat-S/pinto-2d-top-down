@@ -44,7 +44,11 @@ const SOUND_PATHS: Dictionary = {
 	"victory": "res://assets/sfx/victory.wav",
 	"game_over": "res://assets/sfx/game_over.wav",
 	"bgm": "res://assets/sfx/bgm.wav",
-	"retro_bgm": "res://assets/sfx/bgm.wav"
+	"retro_bgm": "res://assets/sfx/bgm.wav",
+	"dash": "res://assets/sfx/dash.wav",
+	"thunder": "res://assets/sfx/thunder.wav",
+	"plasma": "res://assets/sfx/plasma.wav",
+	"chest": "res://assets/sfx/chest.wav"
 }
 
 func _ready() -> void:
@@ -127,6 +131,11 @@ func connect_to_event_bus(eb: Object) -> void:
 		eb.wave_started.connect(_on_wave_started)
 	if eb.has_signal("game_restarted") and not eb.game_restarted.is_connected(_on_game_restarted):
 		eb.game_restarted.connect(_on_game_restarted)
+	if eb.has_signal("player_dashed") and not eb.player_dashed.is_connected(_on_player_dashed):
+		eb.player_dashed.connect(_on_player_dashed)
+
+func _on_player_dashed(_origin: Vector2, _direction: Vector2) -> void:
+	play_dash()
 
 func _on_projectile_fired(_position: Vector2, _direction: Vector2) -> void:
 	play_shoot()
@@ -309,6 +318,21 @@ func play_game_over() -> void:
 func play_ui_select() -> void:
 	play_ui_sfx("xp_gem", 1.2, 0.0)
 
+func play_dash() -> void:
+	var pitch := randf_range(1.1, 1.3)
+	play_sfx("dash", pitch, 0.0)
+
+func play_thunder() -> void:
+	var pitch := randf_range(0.9, 1.1)
+	play_sfx("thunder", pitch, 1.0)
+
+func play_plasma() -> void:
+	var pitch := randf_range(0.95, 1.05)
+	play_sfx("plasma", pitch, -2.0)
+
+func play_chest() -> void:
+	play_ui_sfx("chest", 1.0, 3.0)
+
 # ==============================================================================
 # 4. INTERNAL CHANNEL MANAGEMENT
 # ==============================================================================
@@ -447,6 +471,14 @@ func _synthesize_sound(key: String) -> AudioStreamWAV:
 			return create_wav_from_samples(_synth_victory(), SAMPLE_RATE, false)
 		"bgm", "retro_bgm":
 			return create_wav_from_samples(_synth_retro_bgm(), SAMPLE_RATE, true)
+		"dash":
+			return create_wav_from_samples(_synth_dash(), SAMPLE_RATE, false)
+		"thunder":
+			return create_wav_from_samples(_synth_thunder(), SAMPLE_RATE, false)
+		"plasma":
+			return create_wav_from_samples(_synth_plasma(), SAMPLE_RATE, false)
+		"chest":
+			return create_wav_from_samples(_synth_chest(), SAMPLE_RATE, false)
 		_:
 			return create_wav_from_samples(_synth_shoot(), SAMPLE_RATE, false)
 
@@ -725,3 +757,83 @@ func _synth_retro_bgm() -> PackedFloat32Array:
 		samples[i] = clampf(bass_sample + arp_sample + drum_sample, -1.0, 1.0)
 		
 	return samples
+
+func _synth_dash() -> PackedFloat32Array:
+	var duration := 0.18
+	var count := int(SAMPLE_RATE * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(SAMPLE_RATE)
+		var progress := t / duration
+		var freq := lerpf(800.0, 180.0, progress * progress)
+		phase += freq * (TAU / float(SAMPLE_RATE))
+		var noise := randf_range(-1.0, 1.0)
+		var env := (1.0 - progress) * (1.0 - progress)
+		var saw := _saw_wave(phase)
+		samples[i] = (saw * 0.4 + noise * 0.6) * env * 0.7
+	return samples
+
+func _synth_thunder() -> PackedFloat32Array:
+	var duration := 0.35
+	var count := int(SAMPLE_RATE * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(SAMPLE_RATE)
+		var progress := t / duration
+		var freq := lerpf(400.0, 40.0, progress)
+		phase += freq * (TAU / float(SAMPLE_RATE))
+		var noise := randf_range(-1.0, 1.0)
+		var env := (1.0 - progress)
+		var sq := _square_wave(phase, 0.4)
+		samples[i] = (sq * 0.35 + noise * 0.65) * env * 0.85
+	return samples
+
+func _synth_plasma() -> PackedFloat32Array:
+	var duration := 0.14
+	var count := int(SAMPLE_RATE * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(SAMPLE_RATE)
+		var progress := t / duration
+		var freq := lerpf(300.0, 600.0, progress) + sin(t * 50.0 * TAU) * 30.0
+		phase += freq * (TAU / float(SAMPLE_RATE))
+		var env := (1.0 - progress * 0.5)
+		var tri := _triangle_wave(phase)
+		samples[i] = tri * env * 0.6
+	return samples
+
+func _synth_chest() -> PackedFloat32Array:
+	var duration := 0.85
+	var count := int(SAMPLE_RATE * duration)
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	var melody := [523.25, 659.25, 783.99, 1046.50, 1318.51] # C5, E5, G5, C6, E6
+	var step_dur := 0.12
+	var sustain_start := step_dur * float(melody.size())
+	var phase := 0.0
+	for i in range(count):
+		var t := float(i) / float(SAMPLE_RATE)
+		var freq := 1318.51
+		var env := 1.0
+		if t < sustain_start:
+			var note_idx := clampi(int(t / step_dur), 0, melody.size() - 1)
+			freq = melody[note_idx]
+			var note_t := fmod(t, step_dur)
+			env = 1.0 - (note_t / step_dur) * 0.3
+		else:
+			var sustain_t := t - sustain_start
+			var sustain_len := duration - sustain_start
+			env = 1.0 - (sustain_t / sustain_len) * 0.7
+			var vib := sin(sustain_t * 6.0 * TAU) * 6.0
+			freq = 1318.51 + vib
+		phase += freq * (TAU / float(SAMPLE_RATE))
+		var sq := _square_wave(phase, 0.3)
+		samples[i] = sq * env * 0.7
+	return samples
+

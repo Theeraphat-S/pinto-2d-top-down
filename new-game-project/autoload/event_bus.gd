@@ -35,3 +35,13 @@ signal score_updated(new_score: int)
 signal game_won()
 signal game_lost()
 signal game_restarted()
+
+# Mobility & Combat Feedback Signals
+signal player_dashed(origin: Vector2, direction: Vector2)
+signal screen_shake_requested(trauma_intensity: float, duration: float)
+signal hit_stop_requested(duration: float)
+
+# Encounters & Rewards Signals
+signal elite_spawned(elite_node: Node2D)
+signal treasure_chest_opened(reward_data: Dictionary)
+

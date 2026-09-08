@@ -124,6 +124,9 @@ func _handle_target_hit(target: Node) -> void:
 		if event_bus:
 			if enemy_node is Node2D:
 				event_bus.enemy_hit.emit(enemy_node, final_dmg)
+			if is_crit:
+				event_bus.hit_stop_requested.emit(0.035)
+				event_bus.screen_shake_requested.emit(0.22, 0.2)
 				
 		_play_hit_sfx()
 		

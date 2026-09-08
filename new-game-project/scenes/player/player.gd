@@ -16,14 +16,27 @@ const FRICTION: float = 1400.0
 const SPREAD_ANGLE_DEG: float = 15.0
 const INVULNERABILITY_DURATION: float = 0.4
 
+# Dash Constants
+const DASH_SPEED_MULTIPLIER: float = 2.8
+const DASH_DURATION: float = 0.18
+const DASH_COOLDOWN: float = 1.8
+const AFTERIMAGE_INTERVAL: float = 0.04
+
 # State variables
 var is_dead: bool = false
 var is_invulnerable: bool = false
+var is_dashing: bool = false
+var dash_timer: float = 0.0
+var dash_cooldown_timer: float = 0.0
+var _afterimage_timer: float = 0.0
+var _dash_dir: Vector2 = Vector2.RIGHT
+var _last_move_dir: Vector2 = Vector2.RIGHT
 var _last_hp: float = 100.0
 var _invulnerability_timer: float = 0.0
 var _attack_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _is_flashing: bool = false
+var equipped_weapons: Dictionary = {}
 
 # Child node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -69,6 +82,8 @@ func _connect_events() -> void:
 			event_bus.player_died.connect(_on_player_died)
 		if not event_bus.player_health_changed.is_connected(_on_player_health_changed):
 			event_bus.player_health_changed.connect(_on_player_health_changed)
+		if not event_bus.upgrade_selected.is_connected(_on_upgrade_selected):
+			event_bus.upgrade_selected.connect(_on_upgrade_selected)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -76,15 +91,42 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 		
-	# 1. Kinematic 8-Directional Movement
+	# 1. Kinematic 8-Directional Movement & Dash Processing
 	var input_vector := _get_input_vector()
-	var current_speed: float = game_state.move_speed if game_state else 160.0
-	var target_velocity := input_vector * current_speed
-	
 	if input_vector.length_squared() > 0.0:
-		velocity = velocity.move_toward(target_velocity, ACCELERATION * delta)
+		_last_move_dir = input_vector
+		
+	# Dash cooldown countdown
+	if dash_cooldown_timer > 0.0:
+		dash_cooldown_timer = maxf(0.0, dash_cooldown_timer - delta)
+		
+	# Dash input check
+	if not is_dashing and can_dash():
+		if Input.is_action_just_pressed("dash") or Input.is_action_just_pressed("select"):
+			start_dash()
+			
+	var current_speed: float = game_state.move_speed if game_state else 160.0
+	
+	if is_dashing:
+		dash_timer -= delta
+		velocity = _dash_dir * (current_speed * DASH_SPEED_MULTIPLIER)
+		is_invulnerable = true
+		
+		# Spawn afterimages periodically
+		_afterimage_timer -= delta
+		if _afterimage_timer <= 0.0:
+			_afterimage_timer = AFTERIMAGE_INTERVAL
+			_spawn_afterimage()
+			
+		if dash_timer <= 0.0:
+			is_dashing = false
+			is_invulnerable = false
 	else:
-		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
+		var target_velocity := input_vector * current_speed
+		if input_vector.length_squared() > 0.0:
+			velocity = velocity.move_toward(target_velocity, ACCELERATION * delta)
+		else:
+			velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
 		
 	move_and_slide()
 	
@@ -125,6 +167,72 @@ static func integrate_velocity(current_vel: Vector2, input_dir: Vector2, speed: 
 		return current_vel.move_toward(target_vel, accel * delta)
 	else:
 		return current_vel.move_toward(Vector2.ZERO, frict * delta)
+
+# ==============================================================================
+# ACTIVE DASH SYSTEM
+# ==============================================================================
+
+func can_dash() -> bool:
+	return not is_dead and not is_dashing and dash_cooldown_timer <= 0.0
+
+func get_dash_cooldown_progress() -> float:
+	if DASH_COOLDOWN <= 0.0:
+		return 0.0
+	return clampf(dash_cooldown_timer / DASH_COOLDOWN, 0.0, 1.0)
+
+func start_dash(custom_dir: Vector2 = Vector2.ZERO) -> void:
+	if is_dead or not can_dash():
+		return
+		
+	var dir := custom_dir
+	if dir == Vector2.ZERO:
+		var input_vec := _get_input_vector()
+		dir = input_vec if input_vec.length_squared() > 0.0 else _last_move_dir
+	if dir.length_squared() == 0.0:
+		dir = Vector2.RIGHT
+		
+	_dash_dir = dir.normalized()
+	is_dashing = true
+	dash_timer = DASH_DURATION
+	dash_cooldown_timer = DASH_COOLDOWN
+	is_invulnerable = true
+	_invulnerability_timer = DASH_DURATION
+	_afterimage_timer = 0.0
+	
+	_spawn_afterimage()
+	
+	if event_bus:
+		event_bus.player_dashed.emit(global_position, _dash_dir)
+		event_bus.screen_shake_requested.emit(0.12, 0.15)
+
+func _spawn_afterimage() -> void:
+	if animated_sprite == null or not is_inside_tree():
+		return
+		
+	var ghost := Sprite2D.new()
+	if animated_sprite.sprite_frames:
+		var anim_name := animated_sprite.animation
+		var frame_idx := animated_sprite.frame
+		var frame_count := animated_sprite.sprite_frames.get_frame_count(anim_name)
+		if frame_idx < frame_count:
+			ghost.texture = animated_sprite.sprite_frames.get_frame_texture(anim_name, frame_idx)
+	ghost.global_position = global_position + animated_sprite.position
+	ghost.flip_h = animated_sprite.flip_h
+	ghost.modulate = Color(0.2, 0.8, 1.0, 0.65)
+	ghost.z_index = max(0, z_index - 1)
+	
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().root if get_tree() else null)
+	if parent_node:
+		if parent_node.is_inside_tree():
+			parent_node.call_deferred("add_child", ghost)
+		else:
+			parent_node.add_child(ghost)
+			
+	var tween := create_tween()
+	if tween:
+		tween.tween_property(ghost, "modulate:a", 0.0, 0.22)
+		tween.tween_callback(ghost.queue_free)
+
 
 # ==============================================================================
 # ANIMATION STATE MACHINE
@@ -276,7 +384,7 @@ func _update_magnet_radius() -> void:
 # ==============================================================================
 
 func take_damage(amount: float) -> void:
-	if is_dead or is_invulnerable or amount <= 0.0:
+	if is_dead or is_invulnerable or is_dashing or amount <= 0.0:
 		return
 		
 	_start_hurt_effects()
@@ -296,7 +404,7 @@ func _start_hurt_effects() -> void:
 		hurt_sfx.play()
 
 func _update_timers(delta: float) -> void:
-	if is_invulnerable:
+	if is_invulnerable and not is_dashing:
 		_invulnerability_timer -= delta
 		if _invulnerability_timer <= 0.0:
 			is_invulnerable = false
@@ -334,3 +442,34 @@ func _handle_death() -> void:
 
 func is_alive() -> bool:
 	return not is_dead and (game_state.current_health > 0.0 if game_state else true)
+
+# ==============================================================================
+# MODULAR WEAPON SUBSYSTEM MOUNTING
+# ==============================================================================
+
+func _on_upgrade_selected(card_id: String) -> void:
+	if card_id.begins_with("weapon_"):
+		equip_or_upgrade_weapon(card_id)
+
+func equip_or_upgrade_weapon(weapon_id: String) -> Node:
+	if equipped_weapons.has(weapon_id):
+		var w: Node = equipped_weapons[weapon_id]
+		if is_instance_valid(w) and "rank" in w:
+			w.rank += 1
+		return w
+	else:
+		var scene_path := ""
+		if weapon_id == "weapon_plasma":
+			scene_path = "res://scenes/weapons/orbiting_plasma.tscn"
+		elif weapon_id == "weapon_thunder":
+			scene_path = "res://scenes/weapons/thunder_strike.tscn"
+			
+		if scene_path != "":
+			var packed := load(scene_path) as PackedScene
+			if packed:
+				var inst = packed.instantiate()
+				if inst:
+					add_child(inst)
+					equipped_weapons[weapon_id] = inst
+					return inst
+	return null

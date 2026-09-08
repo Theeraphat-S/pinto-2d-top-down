@@ -23,6 +23,7 @@ const XP_GEM_PATH: String = "res://scenes/pickups/xp_gem.tscn"
 @export var knockback_resistance: float = 0.20
 @export var contact_cooldown: float = 0.5
 @export var animation_fps: float = 7.0
+@export var is_elite: bool = false
 
 var current_health: float = 25.0
 var is_dead: bool = false
@@ -262,8 +263,14 @@ func die() -> void:
 		hitbox_area.set_deferred("monitoring", false)
 		hitbox_area.set_deferred("monitorable", false)
 		
-	# Spawn XP gems
-	_spawn_xp_gems()
+	# Spawn XP gems or Treasure Chest for Elites
+	if is_elite:
+		_spawn_treasure_chest()
+	else:
+		_spawn_xp_gems()
+	
+	# Spawn visual death burst particles
+	_spawn_death_burst()
 	
 	# Award Score and record kill
 	if game_state:
@@ -271,10 +278,49 @@ func die() -> void:
 	elif event_bus:
 		event_bus.enemy_killed.emit(enemy_type, score_value)
 		
+	if event_bus:
+		var shake_intensity: float = 0.35 if ("is_elite" in self and self.is_elite) else 0.08
+		event_bus.screen_shake_requested.emit(shake_intensity, 0.15)
+		
 	# Play SFX
 	_play_death_sfx()
 	
 	queue_free()
+
+func _spawn_death_burst() -> void:
+	var container: Node = _get_spawn_container()
+	if container == null:
+		return
+	var burst_scene: PackedScene = load("res://scenes/effects/death_burst.tscn") as PackedScene
+	if burst_scene:
+		var burst: Node = burst_scene.instantiate()
+		if burst:
+			if burst.has_method("init"):
+				var burst_color: Color = Color(1.0, 0.85, 0.3)
+				if "is_elite" in self and self.is_elite:
+					burst_color = Color(1.0, 0.5, 1.0)
+				burst.init(global_position, burst_color)
+			elif burst is Node2D:
+				burst.global_position = global_position
+			if container.is_inside_tree():
+				container.call_deferred("add_child", burst)
+			else:
+				container.add_child(burst)
+
+func _spawn_treasure_chest() -> void:
+	var container: Node = _get_spawn_container()
+	if container == null:
+		return
+	var chest_scene: PackedScene = load("res://scenes/pickups/treasure_chest.tscn") as PackedScene
+	if chest_scene:
+		var chest: Node = chest_scene.instantiate()
+		if chest:
+			if chest is Node2D:
+				chest.global_position = global_position
+			if container.is_inside_tree():
+				container.call_deferred("add_child", chest)
+			else:
+				container.add_child(chest)
 
 func _spawn_xp_gems() -> void:
 	var container: Node = _get_spawn_container()
