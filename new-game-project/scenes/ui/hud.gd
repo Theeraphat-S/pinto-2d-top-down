@@ -29,6 +29,11 @@ extends CanvasLayer
 var current_wave: int = 1
 var wave_time_remaining: float = 30.0
 var boss_active: bool = false
+var _is_low_health: bool = false
+var _vignette_timer: float = 0.0
+var _vignette_alpha: float = 0.0
+var _last_displayed_hp: float = 100.0
+var vignette: Control = null
 
 func _ready() -> void:
 	layer = 5
@@ -38,6 +43,17 @@ func _ready() -> void:
 	_initialize_ui()
 
 func _ensure_nodes() -> void:
+	if not vignette and is_inside_tree():
+		var v := Control.new()
+		v.name = "LowHealthVignette"
+		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		v.set_anchors_preset(Control.PRESET_FULL_RECT)
+		v.z_index = -1
+		v.draw.connect(_on_vignette_draw.bind(v))
+		add_child(v)
+		move_child(v, 0)
+		vignette = v
+
 	if not hp_bar:
 		hp_bar = get_node_or_null("MarginContainer/TopLeft/HealthSection/HPBar") as ProgressBar
 	if not hp_label:
@@ -133,6 +149,17 @@ func _initialize_ui() -> void:
 	hide_boss_bar()
 
 func _process(delta: float) -> void:
+	# Low health vignette pulse
+	if _is_low_health:
+		_vignette_timer += delta * 6.0
+		_vignette_alpha = 0.25 + 0.2 * sin(_vignette_timer)
+		if vignette:
+			vignette.queue_redraw()
+	elif _vignette_alpha > 0.0:
+		_vignette_alpha = 0.0
+		if vignette:
+			vignette.queue_redraw()
+
 	var gs = _get_game_state()
 	if gs and gs.is_game_active and not gs.is_paused:
 		# If boss is active, timer shows total survival time; otherwise countdown
@@ -150,13 +177,31 @@ func _process(delta: float) -> void:
 		if score_label:
 			score_label.text = "SCORE: %s" % format_number(gs.score)
 
+func _on_vignette_draw(v_node: Control) -> void:
+	if not _is_low_health or _vignette_alpha <= 0.0:
+		return
+	var sz := v_node.get_viewport_rect().size
+	var border_w: float = 10.0
+	var col := Color(1.6, 0.15, 0.25, _vignette_alpha)
+	v_node.draw_rect(Rect2(0, 0, sz.x, border_w), col)
+	v_node.draw_rect(Rect2(0, sz.y - border_w, sz.x, border_w), col)
+	v_node.draw_rect(Rect2(0, 0, border_w, sz.y), col)
+	v_node.draw_rect(Rect2(sz.x - border_w, 0, border_w, sz.y), col)
+
 func update_health(cur_hp: float, max_hp: float) -> void:
 	_ensure_nodes()
+	_is_low_health = (cur_hp / maxf(1.0, max_hp) <= 0.25) and cur_hp > 0.0
 	if hp_bar:
 		hp_bar.max_value = max_hp
 		hp_bar.value = clampf(cur_hp, 0.0, max_hp)
+		if cur_hp < _last_displayed_hp and is_inside_tree() and get_tree() != null:
+			var tw := create_tween()
+			if tw:
+				tw.tween_property(hp_bar, "modulate", Color(1.8, 1.4, 0.5, 1.0), 0.06)
+				tw.tween_property(hp_bar, "modulate", Color.WHITE, 0.18)
 	if hp_label:
 		hp_label.text = "%d / %d" % [int(ceil(max(0.0, cur_hp))), int(max_hp)]
+	_last_displayed_hp = cur_hp
 
 func update_xp(cur_xp: int, req_xp: int, lvl: int) -> void:
 	_ensure_nodes()

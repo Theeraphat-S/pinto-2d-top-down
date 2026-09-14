@@ -148,7 +148,9 @@ func _draw() -> void:
 	for i in range(orb_count):
 		var angle := _current_angle + float(i) * step
 		var p := Vector2(cos(angle), sin(angle)) * radius
-		# Outer glow
-		draw_circle(p, 8.0, Color(0.1, 0.75, 1.0, 0.45))
-		# Core bright orb
-		draw_circle(p, 5.0, Color(0.85, 0.98, 1.0, 0.95))
+		# Outer HDR bloom halo
+		draw_circle(p, 9.5, Color(0.3, 1.2, 2.2, 0.5))
+		# Core bright plasma orb
+		draw_circle(p, 5.5, Color(1.8, 2.2, 2.8, 1.0))
+		# Hot white center
+		draw_circle(p, 2.5, Color(2.5, 2.5, 2.5, 1.0))

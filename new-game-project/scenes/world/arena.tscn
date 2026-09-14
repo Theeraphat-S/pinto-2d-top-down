@@ -19,6 +19,9 @@ size = Vector2(32, 720)
 y_sort_enabled = true
 script = ExtResource("1_arena_script")
 
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+color = Color(0.27, 0.3, 0.4, 1)
+
 [node name="TileMapLayer" type="TileMapLayer" parent="."]
 z_index = -10
 

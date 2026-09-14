@@ -36,6 +36,7 @@ var _current_frame: int = 0
 var _contact_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _is_flashing: bool = false
+var _aura_rot: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -75,6 +76,7 @@ func make_elite(hp_mult: float = 3.5, score_mult: int = 5, scale_factor: float =
 	base_modulate = Color(1.35, 1.15, 0.4, 1.0)
 	if sprite:
 		sprite.modulate = base_modulate
+	_setup_elite_light()
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -106,6 +108,9 @@ func _ready() -> void:
 		if not hitbox_area.body_entered.is_connected(_on_hitbox_body_entered):
 			hitbox_area.body_entered.connect(_on_hitbox_body_entered)
 			
+	if is_elite:
+		_setup_elite_light()
+			
 	_find_player()
 
 func _find_player() -> void:
@@ -123,6 +128,10 @@ func _physics_process(delta: float) -> void:
 	# 1. Update timers and animation
 	_update_timers(delta)
 	_update_animation(delta)
+	
+	if is_elite:
+		_aura_rot += delta * 2.5
+		queue_redraw()
 	
 	# 2. Acquire / validate player target
 	if target_player == null or not is_instance_valid(target_player):
@@ -151,6 +160,26 @@ func _physics_process(delta: float) -> void:
 		
 	# 6. Apply continuous contact damage if overlapping player
 	_check_contact_damage()
+
+func _draw() -> void:
+	if is_dead or not is_elite:
+		return
+	var r := 15.0
+	draw_arc(Vector2(0, 4), r, _aura_rot, _aura_rot + PI * 1.4, 20, Color(1.8, 1.4, 0.3, 0.75), 1.8)
+	draw_arc(Vector2(0, 4), r * 0.7, -_aura_rot, -_aura_rot + PI * 1.2, 16, Color(1.4, 0.9, 0.2, 0.5), 1.2)
+
+func _setup_elite_light() -> void:
+	if has_node("EliteLight"):
+		return
+	var pl := PointLight2D.new()
+	pl.name = "EliteLight"
+	var l_tex = load("res://assets/sprites/radial_light.tres")
+	if l_tex:
+		pl.texture = l_tex
+	pl.color = Color(1.5, 1.2, 0.3, 1.0)
+	pl.energy = 0.85
+	pl.texture_scale = 1.3
+	add_child(pl)
 
 func _update_animation(delta: float) -> void:
 	_ensure_nodes()

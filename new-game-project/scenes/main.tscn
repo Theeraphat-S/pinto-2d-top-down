@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/arena.tscn" id="2_arena"]
@@ -8,6 +8,15 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/victory_screen.tscn" id="6_victory_screen"]
 [ext_resource type="PackedScene" path="res://scenes/ui/game_over_screen.tscn" id="7_game_over_screen"]
 [ext_resource type="PackedScene" path="res://scenes/world/spawner.tscn" id="8_spawner"]
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 3
+glow_enabled = true
+glow_intensity = 0.8
+glow_strength = 1.0
+glow_bloom = 0.2
+glow_blend_mode = 0
+glow_hdr_threshold = 1.0
 
 [node name="Main" type="Node2D"]
 y_sort_enabled = true
@@ -37,3 +46,6 @@ position_smoothing_speed = 10.0
 [node name="VictoryScreen" parent="." instance=ExtResource("6_victory_screen")]
 
 [node name="GameOverScreen" parent="." instance=ExtResource("7_game_over_screen")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")

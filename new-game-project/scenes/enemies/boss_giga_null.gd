@@ -41,6 +41,10 @@ var _p3_spiral_angle: float = 0.0
 var _p3_spiral_shots_left: int = 0
 var _p3_spiral_subtimer: float = 0.0
 
+var _shockwave_radius: float = 0.0
+var _shockwave_alpha: float = 0.0
+var boss_light: PointLight2D = null
+
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var phase_label: Label = $HealthBar/PhaseLabel
 
@@ -75,14 +79,36 @@ func _ready() -> void:
 	current_phase = 1
 	
 	_update_health_bar()
+	_setup_boss_light()
 	
 	if event_bus:
 		event_bus.boss_spawned.emit(self)
 		event_bus.boss_hp_changed.emit(current_health, max_health)
 
+func _setup_boss_light() -> void:
+	if has_node("BossLight"):
+		return
+	var pl := PointLight2D.new()
+	pl.name = "BossLight"
+	var l_tex = load("res://assets/sprites/radial_light.tres")
+	if l_tex:
+		pl.texture = l_tex
+	pl.color = Color(1.4, 0.4, 0.4, 1.0)
+	pl.energy = 1.1
+	pl.texture_scale = 2.2
+	add_child(pl)
+	boss_light = pl
+
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+		
+	if _shockwave_alpha > 0.0:
+		_shockwave_radius += delta * 320.0
+		_shockwave_alpha -= delta * 2.2
+		queue_redraw()
+	elif _is_charging:
+		queue_redraw()
 		
 	# Process phase-specific attack behaviors
 	match current_phase:
@@ -313,6 +339,11 @@ func _enter_phase(new_phase: int) -> void:
 	current_phase = new_phase
 	_ensure_nodes()
 	
+	_shockwave_radius = 16.0
+	_shockwave_alpha = 1.0
+	if event_bus:
+		event_bus.screen_shake_requested.emit(0.35, 0.25)
+	
 	if phase_label:
 		phase_label.text = "PHASE " + str(current_phase)
 		
@@ -324,15 +355,38 @@ func _enter_phase(new_phase: int) -> void:
 		1:
 			animation_fps = 7.0
 			base_modulate = Color.WHITE
+			if boss_light:
+				boss_light.color = Color(1.2, 0.5, 0.5, 1.0)
 		2:
 			animation_fps = 9.0
 			base_modulate = Color(1.3, 0.8, 0.8, 1.0)
+			if boss_light:
+				boss_light.color = Color(1.5, 0.3, 0.6, 1.0)
 		3:
 			animation_fps = 12.0
 			base_modulate = Color(1.5, 0.5, 0.5, 1.0)
+			if boss_light:
+				boss_light.color = Color(1.9, 0.2, 0.2, 1.0)
 			
 	if sprite:
 		sprite.modulate = base_modulate
+
+func _draw() -> void:
+	super._draw()
+	if is_dead:
+		return
+		
+	# 1. Attack telegraph line during charge
+	if _is_charging:
+		var line_len := 240.0
+		var line_end := _dash_dir * line_len
+		draw_line(Vector2.ZERO, line_end, Color(2.0, 0.2, 0.4, 0.8), 2.5)
+		draw_circle(line_end, 6.0, Color(2.0, 0.3, 0.5, 0.7))
+		
+	# 2. Phase transition shockwave
+	if _shockwave_alpha > 0.0:
+		draw_arc(Vector2.ZERO, _shockwave_radius, 0.0, TAU, 32, Color(2.0, 0.4, 0.8, _shockwave_alpha), 3.0)
+		draw_arc(Vector2.ZERO, _shockwave_radius * 0.65, 0.0, TAU, 24, Color(1.5, 0.2, 0.4, _shockwave_alpha * 0.6), 1.5)
 
 func _update_health_bar() -> void:
 	_ensure_nodes()

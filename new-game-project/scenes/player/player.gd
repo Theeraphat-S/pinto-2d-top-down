@@ -44,6 +44,11 @@ var _flash_timer: float = 0.0
 var _is_flashing: bool = false
 var equipped_weapons: Dictionary = {}
 
+# Procedural Juice state variables
+var _bob_timer: float = 0.0
+var _recoil_offset: Vector2 = Vector2.ZERO
+var _base_sprite_pos: Vector2 = Vector2.ZERO
+
 # Child node references
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -75,9 +80,11 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	
-	if animated_sprite and PINTO_FRAMES:
-		animated_sprite.sprite_frames = PINTO_FRAMES
-		animated_sprite.play("idle")
+	if animated_sprite:
+		_base_sprite_pos = animated_sprite.position
+		if PINTO_FRAMES:
+			animated_sprite.sprite_frames = PINTO_FRAMES
+			animated_sprite.play("idle")
 		
 	_update_magnet_radius()
 	_connect_events()
@@ -136,8 +143,9 @@ func _physics_process(delta: float) -> void:
 		
 	move_and_slide()
 	
-	# 2. Sprite Animation Selection
-	_update_animation(input_vector)
+	# 2. Sprite Animation & Procedural Juice Selection
+	_update_animation(input_vector, delta)
+	queue_redraw()
 	
 	# 3. Invulnerability and Damage Flash Timers
 	_update_timers(delta)
@@ -206,10 +214,39 @@ func start_dash(custom_dir: Vector2 = Vector2.ZERO) -> void:
 	_afterimage_timer = 0.0
 	
 	_spawn_afterimage()
+	_spawn_dust_burst()
 	
 	if event_bus:
 		event_bus.player_dashed.emit(global_position, _dash_dir)
 		event_bus.screen_shake_requested.emit(0.12, 0.15)
+
+func _spawn_dust_burst() -> void:
+	if not is_inside_tree() or get_tree() == null:
+		return
+	var dust := CPUParticles2D.new()
+	dust.global_position = global_position + Vector2(0, 6)
+	dust.emitting = true
+	dust.one_shot = true
+	dust.explosiveness = 0.9
+	dust.lifetime = 0.22
+	dust.amount = 6
+	dust.spread = 180.0
+	dust.gravity = Vector2(0, -10)
+	dust.initial_velocity_min = 20.0
+	dust.initial_velocity_max = 45.0
+	dust.scale_amount_min = 1.5
+	dust.scale_amount_max = 3.0
+	dust.color = Color(0.6, 0.9, 1.0, 0.7)
+	
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().root if get_tree() else null)
+	if parent_node:
+		if parent_node.is_inside_tree():
+			parent_node.call_deferred("add_child", dust)
+		else:
+			parent_node.add_child(dust)
+			
+	var timer := get_tree().create_timer(dust.lifetime + 0.05, false)
+	timer.timeout.connect(dust.queue_free)
 
 func _spawn_afterimage() -> void:
 	if animated_sprite == null or not is_inside_tree():
@@ -239,20 +276,52 @@ func _spawn_afterimage() -> void:
 		tween.tween_property(ghost, "modulate:a", 0.0, 0.22)
 		tween.tween_callback(ghost.queue_free)
 
+func _draw() -> void:
+	if is_dead:
+		return
+	var ring_pos := Vector2(0, 8)
+	var ring_rad := 11.0
+	if dash_cooldown_timer <= 0.0:
+		# Dash ready: Neon cyan ring
+		draw_arc(ring_pos, ring_rad, 0.0, TAU, 24, Color(0.2, 0.9, 1.3, 0.65), 1.5)
+	else:
+		# Recharging arc
+		var pct: float = 1.0 - get_dash_cooldown_progress()
+		var start_ang := -PI * 0.5
+		draw_arc(ring_pos, ring_rad, start_ang, start_ang + TAU * pct, 18, Color(0.3, 0.6, 0.9, 0.35), 1.2)
 
 # ==============================================================================
 # ANIMATION STATE MACHINE
 # ==============================================================================
 
-func _update_animation(_input_vector: Vector2) -> void:
+func _update_animation(_input_vector: Vector2, delta: float = 0.016) -> void:
 	if animated_sprite == null:
 		return
 		
 	if is_dead:
 		if animated_sprite.animation != "death":
 			animated_sprite.play("death")
+		animated_sprite.scale = Vector2.ONE
 		return
 		
+	# 1. Decay recoil offset smoothly back to base position
+	if _recoil_offset.length_squared() > 0.01:
+		_recoil_offset = _recoil_offset.move_toward(Vector2.ZERO, 35.0 * delta)
+	else:
+		_recoil_offset = Vector2.ZERO
+	animated_sprite.position = _base_sprite_pos + _recoil_offset
+	
+	# 2. Procedural squash and stretch
+	if is_dashing:
+		animated_sprite.scale = Vector2(1.25, 0.8)
+	elif velocity.length_squared() > 10.0:
+		_bob_timer += delta * 14.0
+		var bob := sin(_bob_timer)
+		animated_sprite.scale = Vector2(1.0 - bob * 0.04, 1.0 + bob * 0.06)
+	else:
+		_bob_timer = 0.0
+		animated_sprite.scale = animated_sprite.scale.move_toward(Vector2.ONE, 10.0 * delta)
+
 	if _is_flashing:
 		# Keep current hurt or move animation while flashing
 		pass
@@ -326,6 +395,10 @@ func _fire_projectiles(target: Variant) -> void:
 				proj.global_position = global_position
 			spawn_parent.call_deferred("add_child", proj)
 			
+	# Recoil kickback on sprite and muzzle flash
+	_recoil_offset = -dir_to_target * 2.5
+	_spawn_muzzle_flash(global_position, dir_to_target)
+
 	# SFX and Global Event
 	if shoot_sfx and shoot_sfx.stream:
 		shoot_sfx.play()
@@ -334,6 +407,34 @@ func _fire_projectiles(target: Variant) -> void:
 		
 	if event_bus:
 		event_bus.projectile_fired.emit(global_position, dir_to_target)
+
+func _spawn_muzzle_flash(pos: Vector2, dir: Vector2) -> void:
+	if not is_inside_tree() or get_tree() == null:
+		return
+	var flash := Node2D.new()
+	flash.global_position = pos + dir * 12.0
+	flash.z_index = z_index + 1
+	
+	var light := PointLight2D.new()
+	var l_tex = load("res://assets/sprites/radial_light.tres")
+	if l_tex:
+		light.texture = l_tex
+	light.color = Color(0.5, 1.2, 1.8, 1.0)
+	light.energy = 1.6
+	light.texture_scale = 0.6
+	flash.add_child(light)
+	
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().root if get_tree() else null)
+	if parent_node:
+		if parent_node.is_inside_tree():
+			parent_node.call_deferred("add_child", flash)
+		else:
+			parent_node.add_child(flash)
+			
+	var tween := flash.create_tween()
+	if tween:
+		tween.tween_property(light, "energy", 0.0, 0.05)
+		tween.tween_callback(flash.queue_free)
 
 static func calculate_spread_angles(base_angle_rad: float, count: int, spread_deg: float = 15.0) -> Array[float]:
 	var angles: Array[float] = []

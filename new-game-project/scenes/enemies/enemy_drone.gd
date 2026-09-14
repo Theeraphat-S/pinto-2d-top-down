@@ -43,6 +43,8 @@ func _physics_process(delta: float) -> void:
 	_process_shooting(delta)
 	
 	super._physics_process(delta)
+	if not is_dead and sprite:
+		sprite.position.y = sin(_shoot_timer * 4.0) * 2.0
 
 func _get_movement_direction(_delta: float) -> Vector2:
 	if target_player == null or not is_instance_valid(target_player):

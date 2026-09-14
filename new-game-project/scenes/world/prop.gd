@@ -15,6 +15,7 @@ enum PropType {
 }
 
 const PROPS_TEXTURE_PATH: String = "res://assets/tilesets/props.png"
+const RADIAL_LIGHT_PATH: String = "res://assets/sprites/radial_light.tres"
 const LAYER_WORLD: int = 1 # Collision Layer 1 (World/Obstacles)
 
 @export var prop_type: PropType = PropType.SERVER_RACK:
@@ -26,14 +27,18 @@ const LAYER_WORLD: int = 1 # Collision Layer 1 (World/Obstacles)
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var shadow: Node2D = $Shadow
+var prop_light: PointLight2D = null
 
 var _shadow_size := Vector2(28.0, 10.0)
+var _anim_time: float = 0.0
+var _pulse_offset: float = 0.0
 
 func _ready() -> void:
 	# Layer 1 (World/Obstacles)
 	collision_layer = LAYER_WORLD
 	collision_mask = 0
 	y_sort_enabled = true
+	_pulse_offset = randf_range(0.0, TAU)
 	
 	_ensure_components()
 	_update_prop_configuration()
@@ -70,6 +75,17 @@ func _ensure_components() -> void:
 		add_child(cs)
 		collision_shape = cs
 
+	if has_node("PropLight"):
+		prop_light = get_node("PropLight")
+	else:
+		var pl := PointLight2D.new()
+		pl.name = "PropLight"
+		var l_tex = load(RADIAL_LIGHT_PATH)
+		if l_tex:
+			pl.texture = l_tex
+		add_child(pl)
+		prop_light = pl
+
 func set_prop_type(type: PropType) -> void:
 	prop_type = type
 	_ensure_components()
@@ -103,6 +119,11 @@ func _update_prop_configuration() -> void:
 			shape.size = Vector2(28, 14)
 			collision_shape.position = Vector2(0, -7)
 			_shadow_size = Vector2(30, 10)
+			if prop_light:
+				prop_light.color = Color(0.2, 0.9, 0.4, 1.0)
+				prop_light.energy = 0.5
+				prop_light.texture_scale = 0.7
+				prop_light.position = Vector2(0, -24)
 			
 		PropType.HOLOGRAM_PYLON:
 			# Hologram Pylon: 16w x 48h, region (36, 16, 16, 48)
@@ -111,6 +132,11 @@ func _update_prop_configuration() -> void:
 			shape.size = Vector2(14, 12)
 			collision_shape.position = Vector2(0, -6)
 			_shadow_size = Vector2(18, 8)
+			if prop_light:
+				prop_light.color = Color(0.3, 0.8, 1.5, 1.0)
+				prop_light.energy = 0.8
+				prop_light.texture_scale = 1.0
+				prop_light.position = Vector2(0, -32)
 			
 		PropType.POWER_CRYSTAL:
 			# Power Crystal: 32w x 32h, region (56, 32, 32, 32)
@@ -119,6 +145,11 @@ func _update_prop_configuration() -> void:
 			shape.size = Vector2(24, 12)
 			collision_shape.position = Vector2(0, -6)
 			_shadow_size = Vector2(28, 10)
+			if prop_light:
+				prop_light.color = Color(0.8, 0.3, 1.6, 1.0)
+				prop_light.energy = 1.0
+				prop_light.texture_scale = 1.2
+				prop_light.position = Vector2(0, -16)
 			
 		PropType.TERMINAL_CONSOLE:
 			# Terminal Console: 32w x 32h, region (92, 32, 32, 32)
@@ -127,9 +158,32 @@ func _update_prop_configuration() -> void:
 			shape.size = Vector2(26, 12)
 			collision_shape.position = Vector2(0, -6)
 			_shadow_size = Vector2(28, 10)
+			if prop_light:
+				prop_light.color = Color(0.2, 1.2, 0.8, 1.0)
+				prop_light.energy = 0.7
+				prop_light.texture_scale = 0.9
+				prop_light.position = Vector2(0, -16)
 
 	if shadow != null:
 		shadow.queue_redraw()
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or prop_light == null:
+		return
+	_anim_time += delta
+	var t: float = _anim_time + _pulse_offset
+	match prop_type:
+		PropType.POWER_CRYSTAL:
+			prop_light.energy = 0.8 + 0.35 * sin(t * 3.5)
+		PropType.HOLOGRAM_PYLON:
+			prop_light.energy = 0.7 + 0.25 * sin(t * 4.2)
+		PropType.TERMINAL_CONSOLE:
+			prop_light.energy = 0.65 + 0.15 * sin(t * 8.0)
+		PropType.SERVER_RACK:
+			if fmod(t * 4.0, 1.0) < 0.12:
+				prop_light.energy = 0.3 + randf() * 0.3
+			else:
+				prop_light.energy = 0.5
 
 func _on_shadow_draw() -> void:
 	if shadow == null:

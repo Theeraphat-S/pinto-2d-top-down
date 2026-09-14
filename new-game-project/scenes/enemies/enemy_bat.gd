@@ -48,3 +48,8 @@ func _get_movement_direction(delta: float) -> Vector2:
 	var combined_dir := (forward + lateral * lateral_offset).normalized()
 	
 	return combined_dir
+
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	if not is_dead and sprite:
+		sprite.rotation = sin(_flight_time * wave_frequency) * 0.14

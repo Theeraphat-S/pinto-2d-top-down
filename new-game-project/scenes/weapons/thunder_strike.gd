@@ -161,8 +161,11 @@ func _draw() -> void:
 		var a: float = bolt.alpha
 		if pts.size() < 2:
 			continue
+		# Ground impact shockwave circle
+		draw_circle(pts[pts.size() - 1], 14.0 * a, Color(0.3, 1.2, 2.2, a * 0.4))
+		draw_circle(pts[pts.size() - 1], 6.0 * a, Color(1.5, 2.0, 2.5, a * 0.7))
 		for i in range(pts.size() - 1):
-			# Outer thick glow
-			draw_line(pts[i], pts[i+1], Color(0.2, 0.8, 1.0, a * 0.5), 5.0)
+			# Outer thick HDR glow
+			draw_line(pts[i], pts[i+1], Color(0.4, 1.4, 2.5, a * 0.65), 5.5)
 			# Core sharp bolt
-			draw_line(pts[i], pts[i+1], Color(1.0, 1.0, 1.0, a * 0.95), 2.0)
+			draw_line(pts[i], pts[i+1], Color(2.0, 2.2, 2.5, a * 0.98), 2.0)

@@ -15,6 +15,9 @@ extends Area2D
 
 var direction: Vector2 = Vector2.RIGHT
 var hit_enemies: Array[Node] = []
+var trail: Line2D = null
+var _trail_points: Array[Vector2] = []
+const MAX_TRAIL_POINTS: int = 6
 var _lifetime_timer: float = 0.0
 var _is_destroyed: bool = false
 
@@ -46,6 +49,26 @@ func _ready() -> void:
 		area_entered.connect(_on_area_entered)
 		
 	rotation = direction.angle()
+	
+	if sprite:
+		sprite.modulate = Color(1.3, 1.5, 1.8, 1.0)
+		
+	_setup_trail()
+
+func _setup_trail() -> void:
+	if has_node("Trail"):
+		trail = get_node("Trail")
+	else:
+		trail = Line2D.new()
+		trail.name = "Trail"
+		trail.top_level = true
+		trail.width = 3.5
+		trail.z_index = z_index - 1
+		var grad := Gradient.new()
+		grad.set_color(0, Color(0.2, 0.8, 1.5, 0.0))
+		grad.set_color(1, Color(0.4, 1.2, 2.0, 0.85))
+		trail.gradient = grad
+		add_child(trail)
 
 func init(pos: Vector2, dir: Vector2, p_dmg: float = -1.0, p_spd: float = -1.0, p_pierce: int = -1, p_crit_chance: float = -1.0, p_crit_mult: float = -1.0) -> void:
 	global_position = pos
@@ -82,6 +105,12 @@ func _physics_process(delta: float) -> void:
 		return
 		
 	global_position += direction * speed * delta
+	if trail:
+		_trail_points.push_front(global_position)
+		if _trail_points.size() > MAX_TRAIL_POINTS:
+			_trail_points.pop_back()
+		trail.points = PackedVector2Array(_trail_points)
+
 	_lifetime_timer += delta
 	if _lifetime_timer >= lifetime:
 		_destroy()
@@ -117,6 +146,9 @@ func _handle_target_hit(target: Node) -> void:
 		var is_crit: bool = (randf() < crit_chance)
 		var final_dmg: float = damage * (crit_multiplier if is_crit else 1.0)
 		
+		# Spawn impact sparks
+		_spawn_impact_sparks(global_position, -direction, is_crit)
+
 		# Apply damage to enemy
 		enemy_node.take_damage(final_dmg, is_crit)
 		
@@ -135,16 +167,48 @@ func _handle_target_hit(target: Node) -> void:
 			_destroy()
 	elif target is TileMapLayer or target is StaticBody2D:
 		# Projectile collided with obstacle / wall
+		_spawn_impact_sparks(global_position, -direction, false)
 		_destroy()
 
 func _play_hit_sfx() -> void:
 	if hit_sfx and hit_sfx.stream and is_inside_tree():
 		hit_sfx.play()
 
+func _spawn_impact_sparks(pos: Vector2, normal: Vector2, is_crit: bool = false) -> void:
+	if not is_inside_tree() or get_tree() == null:
+		return
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().root if get_tree() else null)
+	if parent_node == null:
+		return
+	var sparks := CPUParticles2D.new()
+	sparks.global_position = pos
+	sparks.emitting = true
+	sparks.one_shot = true
+	sparks.explosiveness = 1.0
+	sparks.lifetime = 0.18
+	sparks.amount = 8
+	sparks.spread = 45.0
+	sparks.direction = normal
+	sparks.initial_velocity_min = 70.0
+	sparks.initial_velocity_max = 140.0
+	sparks.scale_amount_min = 1.5
+	sparks.scale_amount_max = 3.0
+	sparks.color = Color(1.8, 1.4, 0.3, 1.0) if is_crit else Color(0.5, 1.3, 2.0, 1.0)
+	
+	if parent_node.is_inside_tree():
+		parent_node.call_deferred("add_child", sparks)
+	else:
+		parent_node.add_child(sparks)
+		
+	var timer := get_tree().create_timer(sparks.lifetime + 0.05, false)
+	timer.timeout.connect(sparks.queue_free)
+
 func _destroy() -> void:
 	if _is_destroyed:
 		return
 	_is_destroyed = true
+	if trail:
+		trail.visible = false
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
 	set_deferred("monitoring", false)

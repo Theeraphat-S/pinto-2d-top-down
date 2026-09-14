@@ -21,3 +21,9 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	if not is_dead and sprite:
+		var hop := sin(_anim_timer * animation_fps * PI)
+		sprite.scale = Vector2(1.0 - hop * 0.08, 1.0 + hop * 0.12)

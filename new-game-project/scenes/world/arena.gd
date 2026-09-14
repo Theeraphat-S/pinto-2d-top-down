@@ -22,6 +22,7 @@ const LAYER_WORLD: int = 1 # Collision Layer 1 (World/Obstacles)
 @onready var walls: StaticBody2D = $Walls
 @onready var props: Node2D = $Props
 @onready var entities: Node2D = $Entities
+@onready var canvas_modulate: CanvasModulate = $CanvasModulate
 
 func _init() -> void:
 	y_sort_enabled = true
@@ -39,6 +40,15 @@ func _ready() -> void:
 	_setup_tilemap()
 
 func _ensure_hierarchy() -> void:
+	if has_node("CanvasModulate"):
+		canvas_modulate = get_node("CanvasModulate")
+	else:
+		var cm := CanvasModulate.new()
+		cm.name = "CanvasModulate"
+		cm.color = Color(0.27, 0.30, 0.40, 1.0)
+		add_child(cm)
+		canvas_modulate = cm
+
 	if has_node("TileMapLayer"):
 		tilemap_layer = get_node("TileMapLayer")
 	else:

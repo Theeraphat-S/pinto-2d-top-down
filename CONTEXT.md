@@ -61,3 +61,59 @@ _Avoid_: Blur, shadow, trail effect
 **HitStop**:
 A micro-freeze frame deceleration (e.g. 0.03s time dilation) triggered upon critical hits or boss impacts to convey mechanical weight.
 _Avoid_: Lag, stutter, pause
+
+**ProceduralJuice**:
+Code-driven dynamic sprite scaling (squash and stretch), recoil kickbacks, and sinusoidal bobbing that inject visceral physical weight into 2D sprites.
+_Avoid_: Jiggle, wobble, ragdoll
+
+**PointLightAura**:
+A 2D radial gradient light source attached to entities or props that softly illuminates surrounding arena tiles and interacts with the ambient darkness.
+_Avoid_: Glow circle, halo, lamp
+
+**HDRGlow**:
+High-dynamic-range post-processing bloom applied to emissive pixel colors (> 1.0 energy) via WorldEnvironment to create vibrant neon energy effects.
+_Avoid_: Blur filter, flare, brightness
+
+**MuzzleFlash**:
+A transient bright visual and light impulse spawned at Pinto's firing origin during projectile discharge.
+_Avoid_: Gun flare, spark pop
+
+**ImpactSparks**:
+A brief directional pixel particle burst spawned at the exact collision point when a projectile strikes an enemy.
+_Avoid_: Hit splat, blood burst
+
+**AnimatedProp**:
+An interactive environmental obstacle that features cyclical lighting, monitor scanlines, or pulsing energy cores without altering static physical boundaries.
+_Avoid_: Dynamic obstacle, destructible object
+
+**AuraRing**:
+A rotating, pulsing neon ground decal rendered beneath Elite enemies or high-tier pickups to clearly establish priority threat identification.
+_Avoid_: Target circle, selection ring
+
+**RibbonTrail**:
+A short, fading line geometry drawn behind high-velocity projectiles to visually convey trajectory and speed.
+_Avoid_: Motion blur, bullet tail
+
+**DustBurst**:
+A transient cluster of tiny directional pixel dust particles spawned at ground level when executing high-acceleration movement or dashing.
+_Avoid_: Dirt puff, smoke cloud
+
+**HealthCatchupBar**:
+A delayed secondary visual layer behind the primary health gauge that interpolates downward after damage to clearly communicate lost health.
+_Avoid_: Ghost bar, damage trace
+
+**DashReadyRing**:
+A subtle circular HUD/character reticle that illuminates when Pinto's evasive dash has fully recovered from cooldown.
+_Avoid_: Cooldown circle, stamina meter
+
+**LowHealthVignette**:
+A pulsating peripheral red screen-edge effect that activates when Pinto's health drops below a critical threshold (25%).
+_Avoid_: Red screen, bloody border, death warning
+
+**AttackTelegraph**:
+A transient translucent vector or area marker projected onto the arena before an attack executes to provide fair reaction opportunity.
+_Avoid_: Aim line, cheat ray, target pointer
+
+**PhaseShockwave**:
+An expanding energetic ring emitted by Boss Giga Null upon health phase transitions that visually punctuates combat escalation.
+_Avoid_: Explosion circle, ring wave
