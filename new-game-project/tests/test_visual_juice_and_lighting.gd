@@ -160,3 +160,56 @@ func test_hud_vignette_and_damage_flash_state() -> void:
 	hud.update_health(0.0, 100.0)
 	assert_false(hud._is_low_health, "0 HP (dead) is not low health")
 	hud.free()
+
+func test_enemy_drop_shadows_and_micro_lights() -> void:
+	var slime_scene: PackedScene = load("res://scenes/enemies/enemy_slime.tscn")
+	var bat_scene: PackedScene = load("res://scenes/enemies/enemy_bat.tscn")
+	var drone_scene: PackedScene = load("res://scenes/enemies/enemy_drone.tscn")
+	var golem_scene: PackedScene = load("res://scenes/enemies/enemy_golem.tscn")
+	var boss_scene: PackedScene = load("res://scenes/enemies/boss_giga_null.tscn")
+	
+	# 1. Slime Shadow
+	var slime = slime_scene.instantiate() as EnemyBase
+	slime._ready()
+	assert_true(slime.show_shadow, "Slime has show_shadow true")
+	assert_eq(slime._shadow_points.size(), 12, "Slime has 12 shadow polygon points")
+	assert_gt(slime.shadow_radius.x, 0.0, "Slime shadow_radius.x > 0")
+	slime.free()
+	
+	# 2. Bat Shadow & Elevation
+	var bat = bat_scene.instantiate() as EnemyBase
+	bat._ready()
+	assert_true(bat.show_shadow, "Bat has show_shadow true")
+	assert_eq(bat._shadow_points.size(), 12, "Bat has 12 shadow polygon points")
+	bat._physics_process(0.016)
+	assert_lt(bat.sprite.position.y, 0.0, "Bat sprite has negative y elevation offset (flight)")
+	bat.free()
+	
+	# 3. Drone Shadow, Elevation & Micro-Light
+	var drone = drone_scene.instantiate() as EnemyBase
+	drone._ready()
+	assert_true(drone.show_shadow, "Drone has show_shadow true")
+	assert_eq(drone._shadow_points.size(), 12, "Drone has 12 shadow polygon points")
+	assert_true(drone.has_node("DroneLight"), "Drone has DroneLight PointLight2D")
+	var d_light = drone.get_node("DroneLight") as PointLight2D
+	assert_gt(d_light.color.b, 1.0, "Drone light has HDR cyan glow")
+	drone.free()
+	
+	# 4. Golem Shadow & Micro-Light
+	var golem = golem_scene.instantiate() as EnemyBase
+	golem._ready()
+	assert_true(golem.show_shadow, "Golem has show_shadow true")
+	assert_eq(golem._shadow_points.size(), 12, "Golem has 12 shadow polygon points")
+	assert_true(golem.has_node("GolemLight"), "Golem has GolemLight PointLight2D")
+	var g_light = golem.get_node("GolemLight") as PointLight2D
+	assert_gt(g_light.color.r, 1.0, "Golem light has HDR amber glow")
+	golem.free()
+	
+	# 5. Boss Shadow
+	var boss = boss_scene.instantiate() as EnemyBase
+	boss._ready()
+	assert_true(boss.show_shadow, "Boss has show_shadow true")
+	assert_eq(boss._shadow_points.size(), 12, "Boss has 12 shadow polygon points")
+	assert_gt(boss.shadow_radius.x, 20.0, "Boss shadow radius is large")
+	boss.free()
+

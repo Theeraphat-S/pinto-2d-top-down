@@ -18,6 +18,8 @@ func _init() -> void:
 	drop_gem_count = 1
 	knockback_resistance = 0.20
 	animation_fps = 7.0
+	shadow_offset = Vector2(0, 5)
+	shadow_radius = Vector2(9.0, 3.5)
 
 func _ready() -> void:
 	super._ready()

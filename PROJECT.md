@@ -45,6 +45,7 @@
 | M9 | Modular Weapons (Phase 2) | Orbiting Plasma, Thunder Strike, Weapon Subsystems, UpgradeCatalog integration | M8 | DONE |
 | M10 | Elite Encounters & Rewards (Phase 3) | Mid-Wave Elite Enemies (W2-4), Treasure Chests, Reward Modal, Test Suite verification | M9 | DONE |
 | M11 | Cyber-Neon Visuals & Procedural Juice | 2D Dynamic Lighting, HDR Bloom, Procedural Squash/Stretch, Bullet Trails, Animated Props, Boss Telegraphs | M10 | DONE |
+| M12 | Enemy Cyber-Neon Visual Overhaul | High-fidelity pixel art sprites, procedural ground drop shadows, flight elevation offsets, archetype micro-lights | M11 | DONE |
 
 ## Code Layout
 - `new-game-project/scenes/enemies/`:

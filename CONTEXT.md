@@ -117,3 +117,12 @@ _Avoid_: Aim line, cheat ray, target pointer
 **PhaseShockwave**:
 An expanding energetic ring emitted by Boss Giga Null upon health phase transitions that visually punctuates combat escalation.
 _Avoid_: Explosion circle, ring wave
+
+**DropShadow**:
+A low-opacity ground-projected elliptical decal anchored at an entity's ground contact plane that visually communicates elevation and spatial depth.
+_Avoid_: Footprint, floor circle, silhouette
+
+**EmissiveCore**:
+A high-intensity neon element or micro-light on a cyber entity that pulses with archetype-specific color and triggers HDR bloom.
+_Avoid_: Light bulb, neon spot, eye flare
+

@@ -70,6 +70,9 @@ func _init() -> void:
 	drop_gem_count = 5 # 5 x 20 XP = 100 XP total
 	knockback_resistance = 1.0 # Immune to knockback
 	animation_fps = 7.0
+	shadow_offset = Vector2(0, 18)
+	shadow_radius = Vector2(26.0, 9.0)
+	shadow_color = Color(0.0, 0.0, 0.0, 0.45)
 
 func _ready() -> void:
 	_ensure_nodes()

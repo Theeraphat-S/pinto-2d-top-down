@@ -19,9 +19,24 @@ func _init() -> void:
 	drop_gem_count = 1
 	knockback_resistance = 0.85
 	animation_fps = 6.0
+	shadow_offset = Vector2(0, 11)
+	shadow_radius = Vector2(15.0, 5.5)
+	shadow_color = Color(0.0, 0.0, 0.0, 0.40)
 
 func _ready() -> void:
 	super._ready()
+	_setup_golem_light()
+
+func _setup_golem_light() -> void:
+	if has_node("GolemLight") or is_elite:
+		return
+	var pl := PointLight2D.new()
+	pl.name = "GolemLight"
+	pl.texture = RADIAL_LIGHT_TEX
+	pl.color = Color(1.8, 0.8, 0.1, 1.0)
+	pl.energy = 0.50
+	pl.texture_scale = 0.85
+	add_child(pl)
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)

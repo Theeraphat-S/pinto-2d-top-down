@@ -25,6 +25,10 @@ const RADIAL_LIGHT_TEX = preload("res://assets/sprites/radial_light.tres")
 @export var contact_cooldown: float = 0.5
 @export var animation_fps: float = 7.0
 @export var is_elite: bool = false
+@export var show_shadow: bool = true
+@export var shadow_offset: Vector2 = Vector2(0, 4)
+@export var shadow_radius: Vector2 = Vector2(8.0, 3.5)
+@export var shadow_color: Color = Color(0.0, 0.0, 0.0, 0.35)
 
 var current_health: float = 25.0
 var is_dead: bool = false
@@ -38,6 +42,8 @@ var _contact_timer: float = 0.0
 var _flash_timer: float = 0.0
 var _is_flashing: bool = false
 var _aura_rot: float = 0.0
+var _shadow_points: PackedVector2Array = PackedVector2Array()
+
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -112,6 +118,8 @@ func _ready() -> void:
 	if is_elite:
 		_setup_elite_light()
 			
+	_update_shadow_points()
+	queue_redraw()
 	_find_player()
 
 func _find_player() -> void:
@@ -163,11 +171,25 @@ func _physics_process(delta: float) -> void:
 	_check_contact_damage()
 
 func _draw() -> void:
-	if is_dead or not is_elite:
+	if is_dead:
 		return
-	var r := 15.0
-	draw_arc(Vector2(0, 4), r, _aura_rot, _aura_rot + PI * 1.4, 20, Color(1.8, 1.4, 0.3, 0.75), 1.8)
-	draw_arc(Vector2(0, 4), r * 0.7, -_aura_rot, -_aura_rot + PI * 1.2, 16, Color(1.4, 0.9, 0.2, 0.5), 1.2)
+	if show_shadow and _shadow_points.size() > 0:
+		draw_colored_polygon(_shadow_points, shadow_color)
+	if is_elite:
+		var r := 15.0
+		draw_arc(Vector2(0, 4), r, _aura_rot, _aura_rot + PI * 1.4, 20, Color(1.8, 1.4, 0.3, 0.75), 1.8)
+		draw_arc(Vector2(0, 4), r * 0.7, -_aura_rot, -_aura_rot + PI * 1.2, 16, Color(1.4, 0.9, 0.2, 0.5), 1.2)
+
+func _update_shadow_points() -> void:
+	if not show_shadow:
+		_shadow_points.clear()
+		return
+	var segments: int = 12
+	_shadow_points.resize(segments)
+	var step: float = TAU / float(segments)
+	for i in range(segments):
+		var a: float = float(i) * step
+		_shadow_points[i] = shadow_offset + Vector2(cos(a) * shadow_radius.x, sin(a) * shadow_radius.y)
 
 func _setup_elite_light() -> void:
 	if has_node("EliteLight"):

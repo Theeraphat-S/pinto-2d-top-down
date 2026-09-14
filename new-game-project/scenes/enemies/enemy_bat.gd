@@ -24,6 +24,9 @@ func _init() -> void:
 	drop_gem_count = 1
 	knockback_resistance = 0.10
 	animation_fps = 8.0
+	shadow_offset = Vector2(0, 7)
+	shadow_radius = Vector2(7.5, 3.0)
+	shadow_color = Color(0.0, 0.0, 0.0, 0.28)
 
 func _ready() -> void:
 	super._ready()
@@ -52,4 +55,5 @@ func _get_movement_direction(delta: float) -> Vector2:
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	if not is_dead and sprite:
+		sprite.position.y = -4.0 + sin(_flight_time * wave_frequency) * 1.5
 		sprite.rotation = sin(_flight_time * wave_frequency) * 0.14
