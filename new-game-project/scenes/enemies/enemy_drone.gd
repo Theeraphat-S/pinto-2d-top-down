@@ -33,22 +33,20 @@ func _init() -> void:
 	shadow_radius = Vector2(8.0, 3.2)
 	shadow_color = Color(0.0, 0.0, 0.0, 0.30)
 
+var drone_light: PointLight2D = null
+var _hover_time: float = 0.0
+
 func _ready() -> void:
 	super._ready()
 	_shoot_timer = randf_range(0.5, shoot_interval) # Offset initial shot
+	_hover_time = randf_range(0.0, 2.0 * PI)
 	_strafe_sign = 1.0 if randf() > 0.5 else -1.0
 	_setup_drone_light()
 
 func _setup_drone_light() -> void:
-	if has_node("DroneLight") or is_elite:
+	if is_elite:
 		return
-	var pl := PointLight2D.new()
-	pl.name = "DroneLight"
-	pl.texture = RADIAL_LIGHT_TEX
-	pl.color = Color(0.2, 1.4, 1.8, 1.0)
-	pl.energy = 0.45
-	pl.texture_scale = 0.55
-	add_child(pl)
+	drone_light = _create_point_light("DroneLight", Color(0.2, 1.4, 1.8, 1.0), 0.45, 0.55)
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -56,10 +54,14 @@ func _physics_process(delta: float) -> void:
 		
 	# Process shooting timer
 	_process_shooting(delta)
+	_hover_time += delta
 	
 	super._physics_process(delta)
 	if not is_dead and sprite:
-		sprite.position.y = -3.0 + sin(_shoot_timer * 4.0) * 2.0
+		sprite.position.y = -3.0 + sin(_hover_time * 4.0) * 2.0
+		if drone_light and is_instance_valid(drone_light):
+			drone_light.position.y = sprite.position.y
+			drone_light.energy = 0.45 + 0.12 * sin(_hover_time * 5.0)
 
 func _get_movement_direction(_delta: float) -> Vector2:
 	if target_player == null or not is_instance_valid(target_player):

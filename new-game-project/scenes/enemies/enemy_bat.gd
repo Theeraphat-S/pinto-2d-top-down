@@ -28,10 +28,14 @@ func _init() -> void:
 	shadow_radius = Vector2(7.5, 3.0)
 	shadow_color = Color(0.0, 0.0, 0.0, 0.28)
 
+var bat_light: PointLight2D = null
+
 func _ready() -> void:
 	super._ready()
 	# Randomize flight phase offset so swarms don't oscillate synchronously
 	_flight_time = randf_range(0.0, 2.0 * PI)
+	if not is_elite:
+		bat_light = _create_point_light("BatLight", Color(1.5, 0.2, 1.8, 1.0), 0.35, 0.55)
 
 func _get_movement_direction(delta: float) -> Vector2:
 	if target_player == null or not is_instance_valid(target_player):
@@ -57,3 +61,6 @@ func _physics_process(delta: float) -> void:
 	if not is_dead and sprite:
 		sprite.position.y = -4.0 + sin(_flight_time * wave_frequency) * 1.5
 		sprite.rotation = sin(_flight_time * wave_frequency) * 0.14
+		if bat_light and is_instance_valid(bat_light):
+			bat_light.position.y = sprite.position.y
+			bat_light.energy = 0.35 + 0.1 * sin(_flight_time * 8.0)

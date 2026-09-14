@@ -188,19 +188,23 @@ func _update_shadow_points() -> void:
 	_shadow_points.resize(segments)
 	var step: float = TAU / float(segments)
 	for i in range(segments):
-		var a: float = float(i) * step
-		_shadow_points[i] = shadow_offset + Vector2(cos(a) * shadow_radius.x, sin(a) * shadow_radius.y)
+		var angle_rad: float = float(i) * step
+		_shadow_points[i] = shadow_offset + Vector2(cos(angle_rad) * shadow_radius.x, sin(angle_rad) * shadow_radius.y)
+
+func _create_point_light(light_name: String, light_color: Color, energy: float, texture_scale_val: float) -> PointLight2D:
+	if has_node(light_name):
+		return get_node(light_name) as PointLight2D
+	var point_light := PointLight2D.new()
+	point_light.name = light_name
+	point_light.texture = RADIAL_LIGHT_TEX
+	point_light.color = light_color
+	point_light.energy = energy
+	point_light.texture_scale = texture_scale_val
+	add_child(point_light)
+	return point_light
 
 func _setup_elite_light() -> void:
-	if has_node("EliteLight"):
-		return
-	var pl := PointLight2D.new()
-	pl.name = "EliteLight"
-	pl.texture = RADIAL_LIGHT_TEX
-	pl.color = Color(1.5, 1.2, 0.3, 1.0)
-	pl.energy = 0.85
-	pl.texture_scale = 1.3
-	add_child(pl)
+	_create_point_light("EliteLight", Color(1.5, 1.2, 0.3, 1.0), 0.85, 1.3)
 
 func _update_animation(delta: float) -> void:
 	_ensure_nodes()

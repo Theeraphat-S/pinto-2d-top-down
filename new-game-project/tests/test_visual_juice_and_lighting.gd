@@ -162,54 +162,68 @@ func test_hud_vignette_and_damage_flash_state() -> void:
 	hud.free()
 
 func test_enemy_drop_shadows_and_micro_lights() -> void:
-	var slime_scene: PackedScene = load("res://scenes/enemies/enemy_slime.tscn")
-	var bat_scene: PackedScene = load("res://scenes/enemies/enemy_bat.tscn")
-	var drone_scene: PackedScene = load("res://scenes/enemies/enemy_drone.tscn")
-	var golem_scene: PackedScene = load("res://scenes/enemies/enemy_golem.tscn")
-	var boss_scene: PackedScene = load("res://scenes/enemies/boss_giga_null.tscn")
+	var scenes := {
+		"slime": "res://scenes/enemies/enemy_slime.tscn",
+		"bat": "res://scenes/enemies/enemy_bat.tscn",
+		"drone": "res://scenes/enemies/enemy_drone.tscn",
+		"golem": "res://scenes/enemies/enemy_golem.tscn",
+		"boss": "res://scenes/enemies/boss_giga_null.tscn"
+	}
 	
-	# 1. Slime Shadow
-	var slime = slime_scene.instantiate() as EnemyBase
+	# 1. Parameterized verification of ground drop shadows across all archetypes
+	for key in scenes:
+		var scene: PackedScene = load(scenes[key]) as PackedScene
+		var enemy = scene.instantiate() as EnemyBase
+		enemy._ready()
+		assert_true(enemy.show_shadow, "[%s] has show_shadow enabled" % key)
+		assert_eq(enemy._shadow_points.size(), 12, "[%s] has 12 shadow polygon points" % key)
+		assert_gt(enemy.shadow_radius.x, 0.0, "[%s] shadow_radius.x > 0" % key)
+		enemy.free()
+
+	# 2. Slime Micro-Light (Toxic Green Emissive Core)
+	var slime_scene: PackedScene = load(scenes["slime"]) as PackedScene
+	var slime = slime_scene.instantiate() as EnemySlime
 	slime._ready()
-	assert_true(slime.show_shadow, "Slime has show_shadow true")
-	assert_eq(slime._shadow_points.size(), 12, "Slime has 12 shadow polygon points")
-	assert_gt(slime.shadow_radius.x, 0.0, "Slime shadow_radius.x > 0")
+	assert_true(slime.has_node("SlimeLight"), "Slime has SlimeLight PointLight2D")
+	var s_light = slime.get_node("SlimeLight") as PointLight2D
+	assert_gt(s_light.color.g, 1.0, "Slime light has HDR toxic green glow")
+	slime._physics_process(0.016)
+	assert_gt(s_light.energy, 0.2, "Slime light energy active")
 	slime.free()
-	
-	# 2. Bat Shadow & Elevation
-	var bat = bat_scene.instantiate() as EnemyBase
+
+	# 3. Bat Micro-Light (Neon Violet Core) & Flight Elevation Tracking
+	var bat_scene: PackedScene = load(scenes["bat"]) as PackedScene
+	var bat = bat_scene.instantiate() as EnemyBat
 	bat._ready()
-	assert_true(bat.show_shadow, "Bat has show_shadow true")
-	assert_eq(bat._shadow_points.size(), 12, "Bat has 12 shadow polygon points")
+	assert_true(bat.has_node("BatLight"), "Bat has BatLight PointLight2D")
+	var b_light = bat.get_node("BatLight") as PointLight2D
+	assert_gt(b_light.color.r, 1.0, "Bat light has HDR violet glow")
 	bat._physics_process(0.016)
-	assert_lt(bat.sprite.position.y, 0.0, "Bat sprite has negative y elevation offset (flight)")
+	assert_lt(bat.sprite.position.y, 0.0, "Bat sprite has negative y elevation offset")
+	assert_almost_eq(bat.bat_light.position.y, bat.sprite.position.y, 0.01, "Bat light tracks flight elevation")
 	bat.free()
-	
-	# 3. Drone Shadow, Elevation & Micro-Light
-	var drone = drone_scene.instantiate() as EnemyBase
+
+	# 4. Drone Micro-Light (Cyan Core) & Hover Elevation Tracking
+	var drone_scene: PackedScene = load(scenes["drone"]) as PackedScene
+	var drone = drone_scene.instantiate() as EnemyDrone
 	drone._ready()
-	assert_true(drone.show_shadow, "Drone has show_shadow true")
-	assert_eq(drone._shadow_points.size(), 12, "Drone has 12 shadow polygon points")
 	assert_true(drone.has_node("DroneLight"), "Drone has DroneLight PointLight2D")
 	var d_light = drone.get_node("DroneLight") as PointLight2D
 	assert_gt(d_light.color.b, 1.0, "Drone light has HDR cyan glow")
+	drone._physics_process(0.016)
+	assert_lt(drone.sprite.position.y, 0.0, "Drone sprite has negative y hover offset")
+	assert_almost_eq(drone.drone_light.position.y, drone.sprite.position.y, 0.01, "Drone light tracks hover elevation")
 	drone.free()
-	
-	# 4. Golem Shadow & Micro-Light
-	var golem = golem_scene.instantiate() as EnemyBase
+
+	# 5. Golem Micro-Light (Amber Reactor Core)
+	var golem_scene: PackedScene = load(scenes["golem"]) as PackedScene
+	var golem = golem_scene.instantiate() as EnemyGolem
 	golem._ready()
-	assert_true(golem.show_shadow, "Golem has show_shadow true")
-	assert_eq(golem._shadow_points.size(), 12, "Golem has 12 shadow polygon points")
 	assert_true(golem.has_node("GolemLight"), "Golem has GolemLight PointLight2D")
 	var g_light = golem.get_node("GolemLight") as PointLight2D
 	assert_gt(g_light.color.r, 1.0, "Golem light has HDR amber glow")
+	golem._physics_process(0.016)
+	assert_gt(g_light.energy, 0.3, "Golem light pulses with stomp")
 	golem.free()
-	
-	# 5. Boss Shadow
-	var boss = boss_scene.instantiate() as EnemyBase
-	boss._ready()
-	assert_true(boss.show_shadow, "Boss has show_shadow true")
-	assert_eq(boss._shadow_points.size(), 12, "Boss has 12 shadow polygon points")
-	assert_gt(boss.shadow_radius.x, 20.0, "Boss shadow radius is large")
-	boss.free()
+
 

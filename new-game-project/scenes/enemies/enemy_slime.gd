@@ -21,11 +21,18 @@ func _init() -> void:
 	shadow_offset = Vector2(0, 5)
 	shadow_radius = Vector2(9.0, 3.5)
 
+var slime_light: PointLight2D = null
+
 func _ready() -> void:
 	super._ready()
+	if not is_elite:
+		slime_light = _create_point_light("SlimeLight", Color(0.2, 1.8, 0.4, 1.0), 0.35, 0.5)
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	if not is_dead and sprite:
-		var hop := sin(_anim_timer * animation_fps * PI)
-		sprite.scale = Vector2(1.0 - hop * 0.08, 1.0 + hop * 0.12)
+	if not is_dead:
+		if sprite:
+			var hop := sin(_anim_timer * animation_fps * PI)
+			sprite.scale = Vector2(1.0 - hop * 0.08, 1.0 + hop * 0.12)
+		if slime_light and is_instance_valid(slime_light):
+			slime_light.energy = 0.35 + 0.1 * sin(_anim_timer * 6.0)
