@@ -236,7 +236,7 @@ func _spawn_boss() -> void:
 			var bounds: Rect2 = arena.get_playable_bounds()
 			_boss_instance.global_position = bounds.position + Vector2(bounds.size.x * 0.5, 80.0)
 		else:
-			_boss_instance.global_position = Vector2(640.0, 160.0)
+			_boss_instance.global_position = Vector2(1280.0, 160.0)
 			
 		container.call_deferred("add_child", boss)
 			
@@ -249,7 +249,7 @@ func _on_boss_defeated() -> void:
 		_complete_current_wave()
 
 func _get_outside_viewport_spawn_pos() -> Vector2:
-	var player_pos := Vector2(640.0, 360.0)
+	var player_pos := Vector2(1280.0, 720.0)
 	if is_inside_tree():
 		var players := get_tree().get_nodes_in_group("player")
 		if players.size() > 0 and is_instance_valid(players[0]) and players[0] is Node2D:

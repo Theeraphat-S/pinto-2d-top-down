@@ -4,14 +4,14 @@ extends "res://tests/test_framework.gd"
 
 const PropScript = preload("res://scenes/world/prop.gd")
 
-const ARENA_WIDTH: float = 1280.0
-const ARENA_HEIGHT: float = 720.0
+const ARENA_WIDTH: float = 2560.0
+const ARENA_HEIGHT: float = 1440.0
 const BORDER_MARGIN: float = 32.0
 
 const BOUND_MIN_X: float = 32.0
-const BOUND_MAX_X: float = 1248.0 # 1280 - 32
+const BOUND_MAX_X: float = 2528.0 # 2560 - 32
 const BOUND_MIN_Y: float = 32.0
-const BOUND_MAX_Y: float = 688.0  # 720 - 32
+const BOUND_MAX_Y: float = 1408.0  # 1440 - 32
 
 # Collision Layer bitmasks (1-based layers in Godot)
 const LAYER_WORLD: int = 1 << 0             # Layer 1
@@ -33,31 +33,31 @@ func clamp_to_arena_bounds(pos: Vector2, margin: float = BORDER_MARGIN) -> Vecto
 # --- Test Cases ---
 
 func test_arena_dimensions_and_bounds() -> void:
-	assert_eq(ARENA_WIDTH, 1280.0, "Arena width is 1280px")
-	assert_eq(ARENA_HEIGHT, 720.0, "Arena height is 720px")
+	assert_eq(ARENA_WIDTH, 2560.0, "Arena width is 2560px")
+	assert_eq(ARENA_HEIGHT, 1440.0, "Arena height is 1440px")
 	
 	# Verify playable area bounds with 32px borders
 	assert_almost_eq(BOUND_MIN_X, 32.0, 0.001, "Min X is 32px")
-	assert_almost_eq(BOUND_MAX_X, 1248.0, 0.001, "Max X is 1248px")
+	assert_almost_eq(BOUND_MAX_X, 2528.0, 0.001, "Max X is 2528px")
 	assert_almost_eq(BOUND_MIN_Y, 32.0, 0.001, "Min Y is 32px")
-	assert_almost_eq(BOUND_MAX_Y, 688.0, 0.001, "Max Y is 688px")
+	assert_almost_eq(BOUND_MAX_Y, 1408.0, 0.001, "Max Y is 1408px")
 
 func test_boundary_clamping_behavior() -> void:
 	# Inside point remains unchanged
-	var center := Vector2(640, 360)
+	var center := Vector2(1280, 720)
 	assert_eq(clamp_to_arena_bounds(center), center, "Center position unchanged")
 	
 	# Outside points are clamped to borders
-	var left_out := Vector2(-50, 360)
-	var right_out := Vector2(1400, 360)
-	var top_out := Vector2(640, -20)
-	var bottom_out := Vector2(640, 800)
+	var left_out := Vector2(-50, 720)
+	var right_out := Vector2(2800, 720)
+	var top_out := Vector2(1280, -20)
+	var bottom_out := Vector2(1280, 1600)
 	var corner_out := Vector2(-100, -100)
 	
-	assert_eq(clamp_to_arena_bounds(left_out), Vector2(BOUND_MIN_X, 360), "Left clamped to 32px")
-	assert_eq(clamp_to_arena_bounds(right_out), Vector2(BOUND_MAX_X, 360), "Right clamped to 1248px")
-	assert_eq(clamp_to_arena_bounds(top_out), Vector2(640, BOUND_MIN_Y), "Top clamped to 32px")
-	assert_eq(clamp_to_arena_bounds(bottom_out), Vector2(640, BOUND_MAX_Y), "Bottom clamped to 688px")
+	assert_eq(clamp_to_arena_bounds(left_out), Vector2(BOUND_MIN_X, 720), "Left clamped to 32px")
+	assert_eq(clamp_to_arena_bounds(right_out), Vector2(BOUND_MAX_X, 720), "Right clamped to 2528px")
+	assert_eq(clamp_to_arena_bounds(top_out), Vector2(1280, BOUND_MIN_Y), "Top clamped to 32px")
+	assert_eq(clamp_to_arena_bounds(bottom_out), Vector2(1280, BOUND_MAX_Y), "Bottom clamped to 1408px")
 	assert_eq(clamp_to_arena_bounds(corner_out), Vector2(BOUND_MIN_X, BOUND_MIN_Y), "Corner clamped to (32, 32)")
 
 func test_collision_layer_matrix() -> void:
@@ -159,18 +159,18 @@ func test_arena_helper_methods() -> void:
 	# Bounds
 	var bounds: Rect2 = arena.get_arena_bounds()
 	assert_eq(bounds.position, Vector2.ZERO, "Arena bounds origin at (0, 0)")
-	assert_eq(bounds.size, Vector2(1280.0, 720.0), "Arena bounds size is 1280x720")
+	assert_eq(bounds.size, Vector2(2560.0, 1440.0), "Arena bounds size is 2560x1440")
 	
 	var playable_bounds: Rect2 = arena.get_playable_bounds()
 	assert_eq(playable_bounds.position, Vector2(32.0, 32.0), "Playable bounds origin at (32, 32)")
-	assert_eq(playable_bounds.size, Vector2(1216.0, 656.0), "Playable bounds size is 1216x656")
+	assert_eq(playable_bounds.size, Vector2(2496.0, 1376.0), "Playable bounds size is 2496x1376")
 	
 	# Clamping
-	assert_eq(arena.clamp_to_arena(Vector2(640, 360)), Vector2(640, 360), "Center unchanged")
-	assert_eq(arena.clamp_to_arena(Vector2(-50, 360)), Vector2(32, 360), "Left clamped")
-	assert_eq(arena.clamp_to_arena(Vector2(1500, 360)), Vector2(1248, 360), "Right clamped")
-	assert_eq(arena.clamp_to_arena(Vector2(640, -100)), Vector2(640, 32), "Top clamped")
-	assert_eq(arena.clamp_to_arena(Vector2(640, 999)), Vector2(640, 688), "Bottom clamped")
+	assert_eq(arena.clamp_to_arena(Vector2(1280, 720)), Vector2(1280, 720), "Center unchanged")
+	assert_eq(arena.clamp_to_arena(Vector2(-50, 720)), Vector2(32, 720), "Left clamped")
+	assert_eq(arena.clamp_to_arena(Vector2(3000, 720)), Vector2(2528, 720), "Right clamped")
+	assert_eq(arena.clamp_to_arena(Vector2(1280, -100)), Vector2(1280, 32), "Top clamped")
+	assert_eq(arena.clamp_to_arena(Vector2(1280, 1999)), Vector2(1280, 1408), "Bottom clamped")
 	
 	arena.free()
 
@@ -179,7 +179,7 @@ func test_arena_spawn_point_outside_viewport() -> void:
 	var arena = arena_scene.instantiate()
 	
 	var bounds: Rect2 = arena.get_arena_bounds()
-	var player_pos := Vector2(640.0, 360.0)
+	var player_pos := Vector2(1280.0, 720.0)
 	var viewport_size := Vector2(640.0, 360.0)
 	var vp_rect := Rect2(player_pos.x - viewport_size.x * 0.5, player_pos.y - viewport_size.y * 0.5, viewport_size.x, viewport_size.y)
 	

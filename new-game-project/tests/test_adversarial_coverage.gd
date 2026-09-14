@@ -7,14 +7,14 @@ const ProjectileScript = preload("res://scenes/weapons/projectile.gd")
 const XPGemScript = preload("res://scenes/pickups/xp_gem.gd")
 const EnemyBaseScript = preload("res://scenes/enemies/enemy_base.gd")
 
-const ARENA_WIDTH: float = 1280.0
-const ARENA_HEIGHT: float = 720.0
+const ARENA_WIDTH: float = 2560.0
+const ARENA_HEIGHT: float = 1440.0
 const BORDER_MARGIN: float = 32.0
 
 const BOUND_MIN_X: float = 32.0
-const BOUND_MAX_X: float = 1248.0 # 1280 - 32
+const BOUND_MAX_X: float = 2528.0 # 2560 - 32
 const BOUND_MIN_Y: float = 32.0
-const BOUND_MAX_Y: float = 688.0  # 720 - 32
+const BOUND_MAX_Y: float = 1408.0  # 1440 - 32
 
 const BASE_SPEED: float = 160.0
 const ACCELERATION: float = 1200.0
@@ -111,9 +111,9 @@ func test_corner_wedging_and_zero_velocity_resolution() -> void:
 	assert_eq(wedged_vel, Vector2.ZERO, "Corner wedging safely halts velocity without NaN or oscillation")
 	
 	# Verify clamping keeps player strictly within bounds
-	var corner_pos: Vector2 = Vector2(1300.0, 750.0)
+	var corner_pos: Vector2 = Vector2(2600.0, 1500.0)
 	var clamped: Vector2 = Arena.new().clamp_to_arena(corner_pos, BORDER_MARGIN)
-	assert_eq(clamped, Vector2(BOUND_MAX_X, BOUND_MAX_Y), "Position clamped to exact bottom-right boundary (1248, 688)")
+	assert_eq(clamped, Vector2(BOUND_MAX_X, BOUND_MAX_Y), "Position clamped to exact bottom-right boundary (2528, 1408)")
 
 func test_obstacle_prop_sliding_tangential_resolution() -> void:
 	# Moving diagonally into a prop's flat top surface (normal = UP)

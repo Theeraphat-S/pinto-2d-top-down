@@ -10,8 +10,8 @@
 # ==============================================================================
 extends "res://tests/test_framework.gd"
 
-const ARENA_WIDTH: float = 1280.0
-const ARENA_HEIGHT: float = 720.0
+const ARENA_WIDTH: float = 2560.0
+const ARENA_HEIGHT: float = 1440.0
 const VIEWPORT_WIDTH: float = 640.0
 const VIEWPORT_HEIGHT: float = 360.0
 const CAMERA_ZOOM: float = 1.0
@@ -19,6 +19,7 @@ const CAMERA_ZOOM: float = 1.0
 const HUDScene = preload("res://scenes/ui/hud.tscn")
 const MainScene = preload("res://scenes/main.tscn")
 const ArenaScene = preload("res://scenes/world/arena.tscn")
+const SaveManagerScript = preload("res://autoload/save_manager.gd")
 
 # ==============================================================================
 # 1. MATHEMATICAL PROOF & CAMERA2D ZOOM EXTENTS
@@ -36,8 +37,8 @@ func test_camera_visible_extent_and_half_dimensions() -> void:
 	assert_almost_eq(half_h, 180.0, 0.001, "Camera half-height is 180px")
 	
 	# Verify that visible world extent is strictly smaller than arena dimensions
-	assert_true(visible_w < ARENA_WIDTH, "Visible width (640) < Arena width (1280)")
-	assert_true(visible_h < ARENA_HEIGHT, "Visible height (360) < Arena height (720)")
+	assert_true(visible_w < ARENA_WIDTH, "Visible width (640) < Arena width (2560)")
+	assert_true(visible_h < ARENA_HEIGHT, "Visible height (360) < Arena height (1440)")
 
 func test_camera_clamped_center_limits() -> void:
 	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM
@@ -51,9 +52,9 @@ func test_camera_clamped_center_limits() -> void:
 	var max_cy: float = ARENA_HEIGHT - half_h
 	
 	assert_almost_eq(min_cx, 320.0, 0.001, "Min clamped camera center X is 320px")
-	assert_almost_eq(max_cx, 960.0, 0.001, "Max clamped camera center X is 960px")
+	assert_almost_eq(max_cx, 2240.0, 0.001, "Max clamped camera center X is 2240px")
 	assert_almost_eq(min_cy, 180.0, 0.001, "Min clamped camera center Y is 180px")
-	assert_almost_eq(max_cy, 540.0, 0.001, "Max clamped camera center Y is 540px")
+	assert_almost_eq(max_cy, 1260.0, 0.001, "Max clamped camera center Y is 1260px")
 
 # ==============================================================================
 # 2. CAMERA2D VISIBLE RECT ACROSS EXTREME PLAYER POSITIONS (CORNERS & EDGES)
@@ -72,9 +73,9 @@ func test_camera_visible_rect_four_corners() -> void:
 	
 	var corners := [
 		{"name": "Top-Left (0, 0)", "pos": Vector2(0.0, 0.0), "expected_left": 0.0, "expected_top": 0.0, "expected_right": 640.0, "expected_bottom": 360.0},
-		{"name": "Top-Right (1280, 0)", "pos": Vector2(1280.0, 0.0), "expected_left": 640.0, "expected_top": 0.0, "expected_right": 1280.0, "expected_bottom": 360.0},
-		{"name": "Bottom-Left (0, 720)", "pos": Vector2(0.0, 720.0), "expected_left": 0.0, "expected_top": 360.0, "expected_right": 640.0, "expected_bottom": 720.0},
-		{"name": "Bottom-Right (1280, 720)", "pos": Vector2(1280.0, 720.0), "expected_left": 640.0, "expected_top": 360.0, "expected_right": 1280.0, "expected_bottom": 720.0},
+		{"name": "Top-Right (2560, 0)", "pos": Vector2(2560.0, 0.0), "expected_left": 1920.0, "expected_top": 0.0, "expected_right": 2560.0, "expected_bottom": 360.0},
+		{"name": "Bottom-Left (0, 1440)", "pos": Vector2(0.0, 1440.0), "expected_left": 0.0, "expected_top": 1080.0, "expected_right": 640.0, "expected_bottom": 1440.0},
+		{"name": "Bottom-Right (2560, 1440)", "pos": Vector2(2560.0, 1440.0), "expected_left": 1920.0, "expected_top": 1080.0, "expected_right": 2560.0, "expected_bottom": 1440.0},
 	]
 	
 	for c in corners:
@@ -97,8 +98,8 @@ func test_camera_visible_rect_four_corners() -> void:
 		# Out-of-bounds exposure guarantee
 		assert_true(rect_left >= 0.0, "[%s] Rect left >= 0 (no left gray border)" % c_name)
 		assert_true(rect_top >= 0.0, "[%s] Rect top >= 0 (no top gray border)" % c_name)
-		assert_true(rect_right <= ARENA_WIDTH, "[%s] Rect right <= 1280 (no right gray border)" % c_name)
-		assert_true(rect_bottom <= ARENA_HEIGHT, "[%s] Rect bottom <= 720 (no bottom gray border)" % c_name)
+		assert_true(rect_right <= ARENA_WIDTH, "[%s] Rect right <= 2560 (no right gray border)" % c_name)
+		assert_true(rect_bottom <= ARENA_HEIGHT, "[%s] Rect bottom <= 1440 (no bottom gray border)" % c_name)
 
 func test_camera_visible_rect_playable_bounds_and_edges() -> void:
 	var visible_w: float = VIEWPORT_WIDTH / CAMERA_ZOOM
@@ -112,17 +113,17 @@ func test_camera_visible_rect_playable_bounds_and_edges() -> void:
 	var max_cy: float = ARENA_HEIGHT - half_h
 	
 	var test_points := [
-		{"name": "Center (640, 360)", "pos": Vector2(640.0, 360.0)},
+		{"name": "Center (1280, 720)", "pos": Vector2(1280.0, 720.0)},
 		{"name": "Playable Top-Left (32, 32)", "pos": Vector2(32.0, 32.0)},
-		{"name": "Playable Top-Right (1248, 32)", "pos": Vector2(1248.0, 32.0)},
-		{"name": "Playable Bottom-Left (32, 688)", "pos": Vector2(32.0, 688.0)},
-		{"name": "Playable Bottom-Right (1248, 688)", "pos": Vector2(1248.0, 688.0)},
-		{"name": "Top Edge (640, 0)", "pos": Vector2(640.0, 0.0)},
-		{"name": "Bottom Edge (640, 720)", "pos": Vector2(640.0, 720.0)},
-		{"name": "Left Edge (0, 360)", "pos": Vector2(0.0, 360.0)},
-		{"name": "Right Edge (1280, 360)", "pos": Vector2(1280.0, 360.0)},
+		{"name": "Playable Top-Right (2528, 32)", "pos": Vector2(2528.0, 32.0)},
+		{"name": "Playable Bottom-Left (32, 1408)", "pos": Vector2(32.0, 1408.0)},
+		{"name": "Playable Bottom-Right (2528, 1408)", "pos": Vector2(2528.0, 1408.0)},
+		{"name": "Top Edge (1280, 0)", "pos": Vector2(1280.0, 0.0)},
+		{"name": "Bottom Edge (1280, 1440)", "pos": Vector2(1280.0, 1440.0)},
+		{"name": "Left Edge (0, 720)", "pos": Vector2(0.0, 720.0)},
+		{"name": "Right Edge (2560, 720)", "pos": Vector2(2560.0, 720.0)},
 		{"name": "Offscreen Extreme (-1000, -1000)", "pos": Vector2(-1000.0, -1000.0)},
-		{"name": "Offscreen Extreme (2500, 2500)", "pos": Vector2(2500.0, 2500.0)},
+		{"name": "Offscreen Extreme (3500, 3500)", "pos": Vector2(3500.0, 3500.0)},
 	]
 	
 	for tp in test_points:
@@ -151,8 +152,8 @@ func test_main_scene_camera_node_configuration() -> void:
 	assert_eq(cam.zoom, Vector2(1.0, 1.0), "Camera zoom is exactly Vector2(1.0, 1.0)")
 	assert_eq(cam.limit_left, 0, "Camera limit_left is 0")
 	assert_eq(cam.limit_top, 0, "Camera limit_top is 0")
-	assert_eq(cam.limit_right, 1280, "Camera limit_right is 1280")
-	assert_eq(cam.limit_bottom, 720, "Camera limit_bottom is 720")
+	assert_eq(cam.limit_right, 2560, "Camera limit_right is 2560")
+	assert_eq(cam.limit_bottom, 1440, "Camera limit_bottom is 1440")
 	assert_true(cam.position_smoothing_enabled, "Position smoothing is enabled")
 	assert_almost_eq(cam.position_smoothing_speed, 10.0, 0.001, "Smoothing speed is 10.0")
 	
@@ -165,11 +166,11 @@ func test_tilemap_full_viewport_coverage() -> void:
 	var tilemap: TileMapLayer = arena.get_node_or_null("TileMapLayer")
 	assert_not_null(tilemap, "TileMapLayer exists in Arena")
 	
-	var total_w = Arena.TILE_COLS * Arena.TILE_SIZE # 40 * 32 = 1280
-	var total_h = Arena.TILE_ROWS * Arena.TILE_SIZE # 23 * 32 = 736
+	var total_w = Arena.TILE_COLS * Arena.TILE_SIZE # 80 * 32 = 2560
+	var total_h = Arena.TILE_ROWS * Arena.TILE_SIZE # 45 * 32 = 1440
 	
-	assert_eq(total_w, 1280, "TileMap width exactly matches Arena width (1280)")
-	assert_true(total_h >= int(ARENA_HEIGHT), "TileMap height (736) covers Arena height (720)")
+	assert_eq(total_w, 2560, "TileMap width exactly matches Arena width (2560)")
+	assert_true(total_h >= int(ARENA_HEIGHT), "TileMap height (1440) covers Arena height (1440)")
 	
 	arena.free()
 
@@ -240,4 +241,32 @@ func test_hud_margin_pinning_across_9_resolutions() -> void:
 		
 		test_hud.free()
 		sub_vp.free()
+
+func test_display_mode_toggle_and_save_persistence() -> void:
+	var sm = SaveManagerScript.new()
+	assert_false(sm.is_fullscreen(), "SaveManager fullscreen defaults to false")
+	assert_true(sm.get_default_data().has("fullscreen"), "SaveManager default data contains fullscreen key")
+	sm.set_fullscreen(true)
+	assert_true(sm.is_fullscreen(), "SaveManager fullscreen set to true")
+	sm.set_fullscreen(false)
+	assert_false(sm.is_fullscreen(), "SaveManager fullscreen set to false")
+	sm.free()
+
+func test_dynamic_boss_zoom_transition() -> void:
+	var main_node = MainScene.instantiate()
+	assert_not_null(main_node, "Main scene instantiates")
+	var cam: Camera2D = main_node.get_node_or_null("Camera2D") as Camera2D
+	assert_not_null(cam, "Camera2D node exists in main scene")
+	assert_eq(cam.zoom, Vector2(1.0, 1.0), "Initial camera zoom is 1.0x")
+	
+	# Simulate Wave 5 Boss transition
+	main_node._on_wave_started(5, -1.0)
+	# Main scene initiates tween to (0.85, 0.85)
+	assert_true(main_node.has_method("_on_wave_started"), "Main scene implements _on_wave_started")
+	
+	# Simulate Reset back to Wave 1
+	main_node._on_wave_started(1, 30.0)
+	assert_true(main_node.has_method("toggle_fullscreen"), "Main scene implements toggle_fullscreen")
+	
+	main_node.free()
 

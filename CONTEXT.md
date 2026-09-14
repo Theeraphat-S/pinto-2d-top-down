@@ -123,6 +123,28 @@ A low-opacity ground-projected elliptical decal anchored at an entity's ground c
 _Avoid_: Footprint, floor circle, silhouette
 
 **EmissiveCore**:
-A high-intensity neon element or micro-light on a cyber entity that pulses with archetype-specific color and triggers HDR bloom.
+An high-intensity neon element or micro-light on a cyber entity that pulses with archetype-specific color and triggers HDR bloom.
 _Avoid_: Light bulb, neon spot, eye flare
+
+**ExpandedArena**:
+The enlarged 2560x1440 cyber-circuit battleground providing tactical maneuverability for swarm kiting, prop cover utilization, and bullet hell evasion.
+_Avoid_: Big map, mega arena, giant stage
+
+**ResponsiveViewport**:
+A display configuration using canvas_items stretch mode with fractional scaling and expand aspect to adapt the game viewport seamlessly across any monitor resolution.
+_Avoid_: Stretched screen, dynamic resolution, screen fit
+
+**DisplayModeToggle**:
+A runtime window management control allowing seamless hotkey switching between windowed and borderless fullscreen modes.
+_Avoid_: Fullscreen button, window resizer
+
+**QuadrantProps**:
+Architecturally clustered tactical obstacles placed symmetrically in arena quadrants to provide kiting cover without obstructing the central combat plaza.
+_Avoid_: Random obstacles, map clutter, scattered props
+
+**DynamicBossZoom**:
+An interpolated camera field-of-view dilation (1.0x -> 0.85x) triggered upon Wave 5 Boss encounter to frame large-scale boss maneuvers and shockwaves.
+_Avoid_: Camera pull-out, screen stretch, view change
+
+
 

@@ -259,10 +259,10 @@ func test_main_scene_instantiation_and_camera_clamping() -> void:
 	assert_eq(cam.zoom, Vector2(1.0, 1.0), "Camera zoom is Vector2(1.0, 1.0)")
 	assert_eq(cam.limit_left, 0, "Camera left limit is 0")
 	assert_eq(cam.limit_top, 0, "Camera top limit is 0")
-	assert_eq(cam.limit_right, 1280, "Camera right limit is 1280")
-	assert_eq(cam.limit_bottom, 720, "Camera bottom limit is 720")
+	assert_eq(cam.limit_right, 2560, "Camera right limit is 2560")
+	assert_eq(cam.limit_bottom, 1440, "Camera bottom limit is 1440")
 	
 	var player: Node2D = main_node.get_node("Player") as Node2D
-	assert_eq(player.position, Vector2(640, 360), "Player positioned at arena center")
+	assert_eq(player.position, Vector2(1280, 720), "Player positioned at arena center")
 	
 	main_node.free()

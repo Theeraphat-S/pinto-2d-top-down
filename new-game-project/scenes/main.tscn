@@ -25,15 +25,15 @@ script = ExtResource("1_script")
 [node name="Arena" parent="." instance=ExtResource("2_arena")]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(640, 360)
+position = Vector2(1280, 720)
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position = Vector2(640, 360)
+position = Vector2(1280, 720)
 zoom = Vector2(1, 1)
 limit_left = 0
 limit_top = 0
-limit_right = 1280
-limit_bottom = 720
+limit_right = 2560
+limit_bottom = 1440
 position_smoothing_enabled = true
 position_smoothing_speed = 10.0
 

@@ -15,6 +15,7 @@ var total_victories: int = 0
 var total_enemies_killed: int = 0
 var highest_wave_reached: int = 1
 var boss_defeated: bool = false
+var fullscreen: bool = false
 
 func _ready() -> void:
 	load_game()
@@ -35,7 +36,8 @@ func get_default_data() -> Dictionary:
 		"total_victories": 0,
 		"total_enemies_killed": 0,
 		"highest_wave_reached": 1,
-		"boss_defeated": false
+		"boss_defeated": false,
+		"fullscreen": false
 	}
 
 func load_game() -> bool:
@@ -77,7 +79,8 @@ func save_game() -> bool:
 		"total_victories": total_victories,
 		"total_enemies_killed": total_enemies_killed,
 		"highest_wave_reached": highest_wave_reached,
-		"boss_defeated": boss_defeated
+		"boss_defeated": boss_defeated,
+		"fullscreen": fullscreen
 	}
 
 	var json_str := JSON.stringify(dict, "\t")
@@ -105,6 +108,13 @@ func reset_save_data() -> void:
 	_apply_dict(get_default_data())
 	save_game()
 
+func is_fullscreen() -> bool:
+	return fullscreen
+
+func set_fullscreen(enabled: bool) -> void:
+	fullscreen = enabled
+	save_game()
+
 func _apply_dict(dict: Dictionary) -> void:
 	high_score = int(dict.get("high_score", 0))
 	best_survival_time = float(dict.get("best_survival_time", 0.0))
@@ -113,6 +123,7 @@ func _apply_dict(dict: Dictionary) -> void:
 	total_enemies_killed = int(dict.get("total_enemies_killed", 0))
 	highest_wave_reached = int(dict.get("highest_wave_reached", 1))
 	boss_defeated = bool(dict.get("boss_defeated", false))
+	fullscreen = bool(dict.get("fullscreen", false))
 
 func _on_game_won() -> void:
 	if GameState:

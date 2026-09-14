@@ -32,6 +32,8 @@ func _connect_event_bus() -> void:
 			eb.screen_shake_requested.connect(_on_screen_shake_requested)
 		if not eb.hit_stop_requested.is_connected(_on_hit_stop_requested):
 			eb.hit_stop_requested.connect(_on_hit_stop_requested)
+		if eb.has_signal("wave_started") and not eb.wave_started.is_connected(_on_wave_started):
+			eb.wave_started.connect(_on_wave_started)
 
 func _initialize_game() -> void:
 	if get_tree():
@@ -41,18 +43,26 @@ func _initialize_game() -> void:
 	if gs:
 		gs.reset_run()
 		
-	# Place player at arena center
+	# Place player at arena center (1280, 720)
 	if player:
-		player.global_position = Vector2(640.0, 360.0)
+		var center_pos := Vector2(1280.0, 720.0)
+		if arena and arena.has_method("get_arena_bounds"):
+			center_pos = arena.get_arena_bounds().get_center()
+		player.global_position = center_pos
 		if camera:
 			camera.global_position = player.global_position
+			
+	# Restore saved fullscreen display mode preference
+	var sm = get_node_or_null("/root/SaveManager")
+	if sm and sm.has_method("is_fullscreen") and sm.is_fullscreen():
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _configure_camera() -> void:
 	if not camera:
 		return
 		
 	camera.zoom = Vector2(1.0, 1.0)
-	# Clamping camera limits to arena bounds (1280x720)
+	# Clamping camera limits to arena bounds (2560x1440)
 	if arena and arena.has_method("get_arena_bounds"):
 		var bounds: Rect2 = arena.get_arena_bounds()
 		camera.limit_left = int(bounds.position.x)
@@ -62,8 +72,8 @@ func _configure_camera() -> void:
 	else:
 		camera.limit_left = 0
 		camera.limit_top = 0
-		camera.limit_right = 1280
-		camera.limit_bottom = 720
+		camera.limit_right = 2560
+		camera.limit_bottom = 1440
 		
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 10.0
@@ -80,7 +90,7 @@ func _process(delta: float) -> void:
 			randf_range(-1.0, 1.0) * shake_amount,
 			randf_range(-1.0, 1.0) * shake_amount
 		)
-		var bounds := Rect2(0.0, 0.0, 1280.0, 720.0)
+		var bounds := Rect2(0.0, 0.0, 2560.0, 1440.0)
 		if arena and arena.has_method("get_arena_bounds"):
 			bounds = arena.get_arena_bounds()
 		var vp_rect := get_viewport_rect()
@@ -98,6 +108,17 @@ func _process(delta: float) -> void:
 func _on_screen_shake_requested(trauma_intensity: float, _duration: float) -> void:
 	_trauma = clampf(_trauma + trauma_intensity, 0.0, 1.0)
 
+func _on_wave_started(wave_num: int, _duration: float) -> void:
+	if not camera:
+		return
+	if wave_num == 5:
+		var tween := create_tween()
+		tween.tween_property(camera, "zoom", Vector2(0.85, 0.85), 2.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		if camera.zoom != Vector2(1.0, 1.0):
+			var tween := create_tween()
+			tween.tween_property(camera, "zoom", Vector2(1.0, 1.0), 1.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
 func _on_hit_stop_requested(duration: float) -> void:
 	if duration <= 0.0 or not is_inside_tree() or get_tree() == null:
 		return
@@ -109,6 +130,12 @@ func _on_hit_stop_requested(duration: float) -> void:
 	Engine.time_scale = 1.0
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F11 or (event.keycode == KEY_ENTER and event.alt_pressed):
+			toggle_fullscreen()
+			get_viewport().set_input_as_handled()
+			return
+			
 	if event.is_action_pressed("pause"):
 		# Only toggle manual pause if no modal is currently displayed
 		var modal_open = (upgrade_menu and upgrade_menu.visible) or \
@@ -117,3 +144,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not modal_open:
 			get_tree().paused = not get_tree().paused
 			get_viewport().set_input_as_handled()
+
+func toggle_fullscreen() -> void:
+	var current_mode := DisplayServer.window_get_mode()
+	var to_fullscreen: bool = (current_mode != DisplayServer.WINDOW_MODE_FULLSCREEN and current_mode != DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
+	if to_fullscreen:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	var sm = get_node_or_null("/root/SaveManager")
+	if sm and sm.has_method("set_fullscreen"):
+		sm.set_fullscreen(to_fullscreen)

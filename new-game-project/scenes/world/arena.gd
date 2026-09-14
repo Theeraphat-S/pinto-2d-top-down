@@ -8,12 +8,12 @@ extends Node2D
 # obstacle props, Y-sorting containers, and spatial spawn helpers.
 # ==============================================================================
 
-const ARENA_WIDTH: float = 1280.0
-const ARENA_HEIGHT: float = 720.0
+const ARENA_WIDTH: float = 2560.0
+const ARENA_HEIGHT: float = 1440.0
 const BORDER_MARGIN: float = 32.0
 const TILE_SIZE: int = 32
-const TILE_COLS: int = 40 # 1280 / 32
-const TILE_ROWS: int = 23 # ceil(720 / 32) = 23 (736px, covering 720px)
+const TILE_COLS: int = 80 # 2560 / 32
+const TILE_ROWS: int = 45 # 1440 / 32 = 45 exact
 
 const TILESET_PATH: String = "res://assets/tilesets/arena_tileset.png"
 const LAYER_WORLD: int = 1 # Collision Layer 1 (World/Obstacles)
@@ -100,21 +100,17 @@ func _setup_walls_collision() -> void:
 	walls.collision_layer = LAYER_WORLD
 	walls.collision_mask = 0
 	
-	# If collision shapes already exist, ensure layer is set and return
-	if walls.get_child_count() >= 4:
-		return
-		
-	# Clear any old children
+	# Clear any old children to rebuild with updated arena dimensions
 	for c in walls.get_children():
 		c.queue_free()
 		
-	# Top Wall: Y <= 32 (Centered at 640, 16, size 1280x32)
+	# Top Wall: Y <= 32 (Centered at 1280, 16, size 2560x32)
 	_add_wall_shape("TopWall", Vector2(ARENA_WIDTH * 0.5, BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN))
-	# Bottom Wall: Y >= 688 (Centered at 640, 704, size 1280x32)
+	# Bottom Wall: Y >= 1408 (Centered at 1280, 1424, size 2560x32)
 	_add_wall_shape("BottomWall", Vector2(ARENA_WIDTH * 0.5, ARENA_HEIGHT - BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN))
-	# Left Wall: X <= 32 (Centered at 16, 360, size 32x720)
+	# Left Wall: X <= 32 (Centered at 16, 720, size 32x1440)
 	_add_wall_shape("LeftWall", Vector2(BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT))
-	# Right Wall: X >= 1248 (Centered at 1264, 360, size 32x720)
+	# Right Wall: X >= 2528 (Centered at 2544, 720, size 32x1440)
 	_add_wall_shape("RightWall", Vector2(ARENA_WIDTH - BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT))
 
 func _add_wall_shape(shape_name: String, center: Vector2, size: Vector2) -> void:
@@ -136,7 +132,8 @@ func _setup_tilemap() -> void:
 	if tilemap_layer.tile_set == null:
 		tilemap_layer.tile_set = _create_arena_tileset()
 		
-	if tilemap_layer.get_used_cells().is_empty():
+	if tilemap_layer.get_used_cells().is_empty() or tilemap_layer.get_used_cells().size() < TILE_COLS * TILE_ROWS:
+		tilemap_layer.clear()
 		_populate_arena_cells()
 
 func _create_arena_tileset() -> TileSet:
