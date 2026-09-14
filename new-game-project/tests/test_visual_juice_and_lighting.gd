@@ -82,6 +82,14 @@ func test_projectile_trail_setup_and_properties() -> void:
 	assert_true(proj.trail.top_level, "Trail has top_level true for global drawing")
 	assert_gt(proj.trail.width, 1.0, "Trail has width > 1.0")
 	assert_not_null(proj.trail.gradient, "Trail has gradient")
+	assert_eq(proj.MAX_TRAIL_POINTS, 5, "MAX_TRAIL_POINTS is 5 per spec")
+	
+	# Simulate movement and destroy
+	proj._physics_process(0.1)
+	assert_gt(proj._trail_points.size(), 0, "Trail points accumulated")
+	proj._destroy()
+	assert_eq(proj._trail_points.size(), 0, "Trail points cleared on destroy")
+	assert_false(proj.trail.visible, "Trail hidden on destroy")
 	proj.free()
 
 func test_prop_light_setup_all_types() -> void:
@@ -119,9 +127,14 @@ func test_boss_light_and_shockwave_properties() -> void:
 	boss._ready()
 	assert_true(boss.has_node("BossLight"), "Boss has BossLight PointLight2D")
 	assert_almost_eq(boss._shockwave_alpha, 0.0, 0.001, "Initial shockwave alpha is 0")
+	assert_almost_eq(boss.P3_CHARGE_TELEGRAPH_DURATION, 0.4, 0.05, "Charge telegraph within 0.35-0.45s")
 	
-	# Enter Phase 2: triggers shockwave
+	# Simulate charge state and verify phase transition resets it
+	boss._is_charging = true
+	boss._dash_subtimer = 0.3
 	boss._enter_phase(2)
+	assert_false(boss._is_charging, "Phase transition cleanly resets charging state")
+	assert_almost_eq(boss._dash_subtimer, 0.0, 0.001, "Dash subtimer reset to 0")
 	assert_gt(boss._shockwave_alpha, 0.5, "Phase transition triggers shockwave alpha > 0.5")
 	assert_gt(boss._shockwave_radius, 10.0, "Shockwave radius initialized > 10.0")
 	boss.free()
@@ -130,9 +143,14 @@ func test_hud_vignette_and_damage_flash_state() -> void:
 	var hud = HUD_SCENE.instantiate()
 	hud._ready()
 	
+	# Verify dual-layer HealthCatchupBar existence
+	assert_not_null(hud.hp_catchup_bar, "Dual-layer HealthCatchupBar created")
+	assert_true(hud.hp_catchup_bar.show_behind_parent, "Catchup bar renders behind parent")
+	
 	# Normal health > 25%: low health false
 	hud.update_health(100.0, 100.0)
 	assert_false(hud._is_low_health, "100 HP is not low health")
+	assert_almost_eq(hud.hp_catchup_bar.value, 100.0, 0.01, "Catchup bar value is 100")
 	
 	# Low health <= 25%: low health true
 	hud.update_health(20.0, 100.0)

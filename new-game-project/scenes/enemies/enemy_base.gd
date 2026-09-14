@@ -9,6 +9,7 @@ extends CharacterBody2D
 # ==============================================================================
 
 const XP_GEM_PATH: String = "res://scenes/pickups/xp_gem.tscn"
+const RADIAL_LIGHT_TEX = preload("res://assets/sprites/radial_light.tres")
 
 @export var enemy_type: String = "base"
 @export var max_health: float = 25.0:
@@ -173,9 +174,7 @@ func _setup_elite_light() -> void:
 		return
 	var pl := PointLight2D.new()
 	pl.name = "EliteLight"
-	var l_tex = load("res://assets/sprites/radial_light.tres")
-	if l_tex:
-		pl.texture = l_tex
+	pl.texture = RADIAL_LIGHT_TEX
 	pl.color = Color(1.5, 1.2, 0.3, 1.0)
 	pl.energy = 0.85
 	pl.texture_scale = 1.3

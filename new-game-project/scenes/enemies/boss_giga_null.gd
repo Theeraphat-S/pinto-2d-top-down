@@ -31,6 +31,7 @@ var _p2_shot_subtimer: float = 0.0
 
 # Phase 3 Timers & State
 var _p3_dash_timer: float = 0.0
+const P3_CHARGE_TELEGRAPH_DURATION: float = 0.4 # Strict 0.35-0.45s window
 const P3_DASH_INTERVAL: float = 4.5
 var _is_dashing: bool = false
 var _is_charging: bool = false
@@ -90,9 +91,7 @@ func _setup_boss_light() -> void:
 		return
 	var pl := PointLight2D.new()
 	pl.name = "BossLight"
-	var l_tex = load("res://assets/sprites/radial_light.tres")
-	if l_tex:
-		pl.texture = l_tex
+	pl.texture = RADIAL_LIGHT_TEX
 	pl.color = Color(1.4, 0.4, 0.4, 1.0)
 	pl.energy = 1.1
 	pl.texture_scale = 2.2
@@ -107,7 +106,7 @@ func _physics_process(delta: float) -> void:
 		_shockwave_radius += delta * 320.0
 		_shockwave_alpha -= delta * 2.2
 		queue_redraw()
-	elif _is_charging:
+	elif _is_charging or _p2_burst_shots_left > 0:
 		queue_redraw()
 		
 	# Process phase-specific attack behaviors
@@ -251,7 +250,7 @@ func _process_phase_3(delta: float) -> void:
 		# Visual telegraph shake/flash
 		if sprite:
 			sprite.modulate = Color(2.5, 0.4, 0.4, 1.0) if int(_dash_subtimer * 20.0) % 2 == 0 else base_modulate
-		if _dash_subtimer >= 0.6:
+		if _dash_subtimer >= P3_CHARGE_TELEGRAPH_DURATION:
 			_execute_charge_dash()
 	elif _is_dashing:
 		move_speed = 320.0
@@ -339,6 +338,11 @@ func _enter_phase(new_phase: int) -> void:
 	current_phase = new_phase
 	_ensure_nodes()
 	
+	_is_charging = false
+	_is_dashing = false
+	_dash_subtimer = 0.0
+	queue_redraw()
+	
 	_shockwave_radius = 16.0
 	_shockwave_alpha = 1.0
 	if event_bus:
@@ -376,12 +380,17 @@ func _draw() -> void:
 	if is_dead:
 		return
 		
-	# 1. Attack telegraph line during charge
+	# 1. Attack telegraph line during charge or burst
 	if _is_charging:
 		var line_len := 240.0
 		var line_end := _dash_dir * line_len
 		draw_line(Vector2.ZERO, line_end, Color(2.0, 0.2, 0.4, 0.8), 2.5)
 		draw_circle(line_end, 6.0, Color(2.0, 0.3, 0.5, 0.7))
+	elif _p2_burst_shots_left > 0 and target_player and is_instance_valid(target_player):
+		var target_dir := (target_player.global_position - global_position).normalized()
+		if target_dir.length_squared() > 0.0:
+			draw_line(Vector2.ZERO, target_dir * 180.0, Color(2.0, 0.4, 0.2, 0.5), 1.5)
+			draw_circle(target_dir * 180.0, 4.0, Color(2.0, 0.5, 0.2, 0.6))
 		
 	# 2. Phase transition shockwave
 	if _shockwave_alpha > 0.0:
@@ -397,6 +406,11 @@ func _update_health_bar() -> void:
 func die() -> void:
 	if is_dead:
 		return
+	
+	_is_charging = false
+	_is_dashing = false
+	_dash_subtimer = 0.0
+	queue_redraw()
 	
 	if event_bus:
 		event_bus.boss_hp_changed.emit(0.0, max_health)

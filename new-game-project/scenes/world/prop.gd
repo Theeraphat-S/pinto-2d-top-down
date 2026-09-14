@@ -15,8 +15,55 @@ enum PropType {
 }
 
 const PROPS_TEXTURE_PATH: String = "res://assets/tilesets/props.png"
-const RADIAL_LIGHT_PATH: String = "res://assets/sprites/radial_light.tres"
+const RADIAL_LIGHT_TEX = preload("res://assets/sprites/radial_light.tres")
 const LAYER_WORLD: int = 1 # Collision Layer 1 (World/Obstacles)
+
+const PROP_CONFIGS: Dictionary = {
+	PropType.SERVER_RACK: {
+		"region": Rect2(0, 16, 32, 48),
+		"sprite_pos": Vector2(0, -24),
+		"shape_size": Vector2(28, 14),
+		"col_pos": Vector2(0, -7),
+		"shadow_size": Vector2(30, 10),
+		"light_color": Color(0.2, 0.9, 0.4, 1.0),
+		"light_energy": 0.5,
+		"light_scale": 0.7,
+		"light_pos": Vector2(0, -24),
+	},
+	PropType.HOLOGRAM_PYLON: {
+		"region": Rect2(36, 16, 16, 48),
+		"sprite_pos": Vector2(0, -24),
+		"shape_size": Vector2(14, 12),
+		"col_pos": Vector2(0, -6),
+		"shadow_size": Vector2(18, 8),
+		"light_color": Color(0.3, 0.8, 1.5, 1.0),
+		"light_energy": 0.8,
+		"light_scale": 1.0,
+		"light_pos": Vector2(0, -32),
+	},
+	PropType.POWER_CRYSTAL: {
+		"region": Rect2(56, 32, 32, 32),
+		"sprite_pos": Vector2(0, -16),
+		"shape_size": Vector2(24, 12),
+		"col_pos": Vector2(0, -6),
+		"shadow_size": Vector2(28, 10),
+		"light_color": Color(0.8, 0.3, 1.6, 1.0),
+		"light_energy": 1.0,
+		"light_scale": 1.2,
+		"light_pos": Vector2(0, -16),
+	},
+	PropType.TERMINAL_CONSOLE: {
+		"region": Rect2(92, 32, 32, 32),
+		"sprite_pos": Vector2(0, -16),
+		"shape_size": Vector2(26, 12),
+		"col_pos": Vector2(0, -6),
+		"shadow_size": Vector2(28, 10),
+		"light_color": Color(0.2, 1.2, 0.8, 1.0),
+		"light_energy": 0.7,
+		"light_scale": 0.9,
+		"light_pos": Vector2(0, -16),
+	}
+}
 
 @export var prop_type: PropType = PropType.SERVER_RACK:
 	set(val):
@@ -80,9 +127,7 @@ func _ensure_components() -> void:
 	else:
 		var pl := PointLight2D.new()
 		pl.name = "PropLight"
-		var l_tex = load(RADIAL_LIGHT_PATH)
-		if l_tex:
-			pl.texture = l_tex
+		pl.texture = RADIAL_LIGHT_TEX
 		add_child(pl)
 		prop_light = pl
 
@@ -111,58 +156,17 @@ func _update_prop_configuration() -> void:
 		shape = RectangleShape2D.new()
 		collision_shape.shape = shape
 
-	match prop_type:
-		PropType.SERVER_RACK:
-			# Server Rack: 32w x 48h, region (0, 16, 32, 48)
-			sprite.region_rect = Rect2(0, 16, 32, 48)
-			sprite.position = Vector2(0, -24)
-			shape.size = Vector2(28, 14)
-			collision_shape.position = Vector2(0, -7)
-			_shadow_size = Vector2(30, 10)
-			if prop_light:
-				prop_light.color = Color(0.2, 0.9, 0.4, 1.0)
-				prop_light.energy = 0.5
-				prop_light.texture_scale = 0.7
-				prop_light.position = Vector2(0, -24)
-			
-		PropType.HOLOGRAM_PYLON:
-			# Hologram Pylon: 16w x 48h, region (36, 16, 16, 48)
-			sprite.region_rect = Rect2(36, 16, 16, 48)
-			sprite.position = Vector2(0, -24)
-			shape.size = Vector2(14, 12)
-			collision_shape.position = Vector2(0, -6)
-			_shadow_size = Vector2(18, 8)
-			if prop_light:
-				prop_light.color = Color(0.3, 0.8, 1.5, 1.0)
-				prop_light.energy = 0.8
-				prop_light.texture_scale = 1.0
-				prop_light.position = Vector2(0, -32)
-			
-		PropType.POWER_CRYSTAL:
-			# Power Crystal: 32w x 32h, region (56, 32, 32, 32)
-			sprite.region_rect = Rect2(56, 32, 32, 32)
-			sprite.position = Vector2(0, -16)
-			shape.size = Vector2(24, 12)
-			collision_shape.position = Vector2(0, -6)
-			_shadow_size = Vector2(28, 10)
-			if prop_light:
-				prop_light.color = Color(0.8, 0.3, 1.6, 1.0)
-				prop_light.energy = 1.0
-				prop_light.texture_scale = 1.2
-				prop_light.position = Vector2(0, -16)
-			
-		PropType.TERMINAL_CONSOLE:
-			# Terminal Console: 32w x 32h, region (92, 32, 32, 32)
-			sprite.region_rect = Rect2(92, 32, 32, 32)
-			sprite.position = Vector2(0, -16)
-			shape.size = Vector2(26, 12)
-			collision_shape.position = Vector2(0, -6)
-			_shadow_size = Vector2(28, 10)
-			if prop_light:
-				prop_light.color = Color(0.2, 1.2, 0.8, 1.0)
-				prop_light.energy = 0.7
-				prop_light.texture_scale = 0.9
-				prop_light.position = Vector2(0, -16)
+	var cfg: Dictionary = PROP_CONFIGS.get(prop_type, PROP_CONFIGS[PropType.SERVER_RACK])
+	sprite.region_rect = cfg["region"]
+	sprite.position = cfg["sprite_pos"]
+	shape.size = cfg["shape_size"]
+	collision_shape.position = cfg["col_pos"]
+	_shadow_size = cfg["shadow_size"]
+	if prop_light:
+		prop_light.color = cfg["light_color"]
+		prop_light.energy = cfg["light_energy"]
+		prop_light.texture_scale = cfg["light_scale"]
+		prop_light.position = cfg["light_pos"]
 
 	if shadow != null:
 		shadow.queue_redraw()
@@ -171,16 +175,19 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint() or prop_light == null:
 		return
 	_anim_time += delta
-	var t: float = _anim_time + _pulse_offset
+	var anim_phase: float = _anim_time + _pulse_offset
 	match prop_type:
 		PropType.POWER_CRYSTAL:
-			prop_light.energy = 0.8 + 0.35 * sin(t * 3.5)
+			prop_light.energy = 0.8 + 0.35 * sin(anim_phase * 3.5)
 		PropType.HOLOGRAM_PYLON:
-			prop_light.energy = 0.7 + 0.25 * sin(t * 4.2)
+			prop_light.energy = 0.7 + 0.25 * sin(anim_phase * 4.2)
 		PropType.TERMINAL_CONSOLE:
-			prop_light.energy = 0.65 + 0.15 * sin(t * 8.0)
+			prop_light.energy = 0.65 + 0.15 * sin(anim_phase * 8.0)
+			if sprite:
+				var scanline_lum: float = 0.92 + 0.08 * sin(anim_phase * 16.0)
+				sprite.modulate = Color(scanline_lum, scanline_lum, scanline_lum, 1.0)
 		PropType.SERVER_RACK:
-			if fmod(t * 4.0, 1.0) < 0.12:
+			if fmod(anim_phase * 4.0, 1.0) < 0.12:
 				prop_light.energy = 0.3 + randf() * 0.3
 			else:
 				prop_light.energy = 0.5

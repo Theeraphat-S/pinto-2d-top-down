@@ -34,6 +34,8 @@ var _vignette_timer: float = 0.0
 var _vignette_alpha: float = 0.0
 var _last_displayed_hp: float = 100.0
 var vignette: Control = null
+var hp_catchup_bar: ProgressBar = null
+var _catchup_tween: Tween = null
 
 func _ready() -> void:
 	layer = 5
@@ -44,18 +46,39 @@ func _ready() -> void:
 
 func _ensure_nodes() -> void:
 	if not vignette and is_inside_tree():
-		var v := Control.new()
-		v.name = "LowHealthVignette"
-		v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.set_anchors_preset(Control.PRESET_FULL_RECT)
-		v.z_index = -1
-		v.draw.connect(_on_vignette_draw.bind(v))
-		add_child(v)
-		move_child(v, 0)
-		vignette = v
+		var vignette_overlay := Control.new()
+		vignette_overlay.name = "LowHealthVignette"
+		vignette_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vignette_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vignette_overlay.z_index = -1
+		vignette_overlay.draw.connect(_on_vignette_draw.bind(vignette_overlay))
+		add_child(vignette_overlay)
+		move_child(vignette_overlay, 0)
+		vignette = vignette_overlay
 
 	if not hp_bar:
 		hp_bar = get_node_or_null("MarginContainer/TopLeft/HealthSection/HPBar") as ProgressBar
+	if hp_bar and not hp_catchup_bar:
+		if hp_bar.has_node("HealthCatchupBar"):
+			hp_catchup_bar = hp_bar.get_node("HealthCatchupBar") as ProgressBar
+		else:
+			var catchup := ProgressBar.new()
+			catchup.name = "HealthCatchupBar"
+			catchup.show_behind_parent = true
+			catchup.set_anchors_preset(Control.PRESET_FULL_RECT)
+			catchup.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			catchup.show_percentage = false
+			var catchup_fill := StyleBoxFlat.new()
+			catchup_fill.bg_color = Color(1.0, 0.85, 0.35, 0.95)
+			catchup_fill.corner_radius_top_left = 3
+			catchup_fill.corner_radius_top_right = 3
+			catchup_fill.corner_radius_bottom_right = 3
+			catchup_fill.corner_radius_bottom_left = 3
+			catchup.add_theme_stylebox_override("fill", catchup_fill)
+			var bg_empty := StyleBoxEmpty.new()
+			catchup.add_theme_stylebox_override("background", bg_empty)
+			hp_bar.add_child(catchup)
+			hp_catchup_bar = catchup
 	if not hp_label:
 		hp_label = get_node_or_null("MarginContainer/TopLeft/HealthSection/HPLabel") as Label
 	if not xp_bar:
@@ -199,6 +222,20 @@ func update_health(cur_hp: float, max_hp: float) -> void:
 			if tw:
 				tw.tween_property(hp_bar, "modulate", Color(1.8, 1.4, 0.5, 1.0), 0.06)
 				tw.tween_property(hp_bar, "modulate", Color.WHITE, 0.18)
+
+	if hp_catchup_bar:
+		hp_catchup_bar.max_value = max_hp
+		if cur_hp < _last_displayed_hp and is_inside_tree() and get_tree() != null:
+			if _catchup_tween and _catchup_tween.is_valid():
+				_catchup_tween.kill()
+			_catchup_tween = create_tween()
+			if _catchup_tween:
+				_catchup_tween.tween_property(hp_catchup_bar, "value", clampf(cur_hp, 0.0, max_hp), 0.45).set_delay(0.2).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		else:
+			if _catchup_tween and _catchup_tween.is_valid():
+				_catchup_tween.kill()
+			hp_catchup_bar.value = clampf(cur_hp, 0.0, max_hp)
+
 	if hp_label:
 		hp_label.text = "%d / %d" % [int(ceil(max(0.0, cur_hp))), int(max_hp)]
 	_last_displayed_hp = cur_hp

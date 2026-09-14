@@ -17,7 +17,7 @@ var direction: Vector2 = Vector2.RIGHT
 var hit_enemies: Array[Node] = []
 var trail: Line2D = null
 var _trail_points: Array[Vector2] = []
-const MAX_TRAIL_POINTS: int = 6
+const MAX_TRAIL_POINTS: int = 5
 var _lifetime_timer: float = 0.0
 var _is_destroyed: bool = false
 
@@ -74,6 +74,9 @@ func init(pos: Vector2, dir: Vector2, p_dmg: float = -1.0, p_spd: float = -1.0, 
 	global_position = pos
 	direction = dir.normalized() if dir.length_squared() > 0.0 else Vector2.RIGHT
 	rotation = direction.angle()
+	_trail_points.clear()
+	if trail:
+		trail.clear_points()
 	
 	if p_dmg >= 0.0:
 		damage = p_dmg
@@ -207,7 +210,9 @@ func _destroy() -> void:
 	if _is_destroyed:
 		return
 	_is_destroyed = true
+	_trail_points.clear()
 	if trail:
+		trail.clear_points()
 		trail.visible = false
 	if collision_shape:
 		collision_shape.set_deferred("disabled", true)
