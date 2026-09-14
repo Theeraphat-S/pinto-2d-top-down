@@ -2,9 +2,10 @@
 
 ## Architecture
 - **Engine**: Godot 4.7.2 (GDScript 2.0)
-- **Base Viewport**: 640 x 360 (16:9 pixel-art native)
-- **Display Stretch**: mode="canvas_items", aspect="keep", window_override=1280x720 (2x integer scale)
-- **World & Arena Dimensions**: 1280 x 720 (Camera2D zoom=1.0x centered on player, clamped [0, 0, 1280, 720])
+- **Base Viewport**: 640 x 360 (16:9 pixel-art virtual resolution)
+- **Display Stretch**: mode="canvas_items", aspect="expand", scale_mode="fractional", window_override=1280x720, resizable=true
+- **World & Arena Dimensions**: 2560 x 1440 (80x45 tiles of 32x32 px; Camera2D base zoom=1.0x centered on player, clamped [0, 0, 2560, 1440], DynamicBossZoom to 0.85x on Wave 5)
+- **Window Management**: F11 / Alt+Enter DisplayModeToggle with persistent fullscreen state in SaveManager
 - **Sprite Animation Architecture**: Sprite2D with `hframes = 4`, animated frame cycling (6-8 FPS) via timer-driven frame index in `_physics_process()`. Swarm desynchronization via randomized initial timer/frame.
 - **Visual Feedback Architecture**: Modulate hurt flash (white/red, 0.08s duration) restoring `base_modulate` (preserving Boss phase tints).
 - **Floating Damage Popup Architecture**: `Node2D` + `Label` at `scenes/ui/damage_number.tscn` (`z_index = 50`), instantiated in `EnemyBase.take_damage()`, added to `_get_spawn_container()` via `call_deferred("add_child", popup)`, animated via SceneTree Tween (20px rise, 1.2->1.0 scale pop, 0.5s alpha fadeout, `queue_free()`).
@@ -46,6 +47,7 @@
 | M10 | Elite Encounters & Rewards (Phase 3) | Mid-Wave Elite Enemies (W2-4), Treasure Chests, Reward Modal, Test Suite verification | M9 | DONE |
 | M11 | Cyber-Neon Visuals & Procedural Juice | 2D Dynamic Lighting, HDR Bloom, Procedural Squash/Stretch, Bullet Trails, Animated Props, Boss Telegraphs | M10 | DONE |
 | M12 | Enemy Cyber-Neon Visual Overhaul | High-fidelity pixel art sprites, procedural ground drop shadows, flight elevation offsets, archetype micro-lights | M11 | DONE |
+| M13 | Expanded Arena & Responsive Display | 2560x1440 Arena, 4-Quadrant Props, canvas_items expand fractional stretch, F11/Alt+Enter toggle, Boss Zoom | M12 | DONE |
 
 ## Code Layout
 - `new-game-project/scenes/enemies/`:

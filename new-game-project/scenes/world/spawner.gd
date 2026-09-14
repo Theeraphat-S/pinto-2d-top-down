@@ -249,19 +249,29 @@ func _on_boss_defeated() -> void:
 		_complete_current_wave()
 
 func _get_outside_viewport_spawn_pos() -> Vector2:
-	var player_pos := Vector2(1280.0, 720.0)
+	var arena := _get_arena()
+	var player_pos: Vector2 = Vector2(1280.0, 720.0)
+	if arena and arena.has_method("get_arena_bounds"):
+		player_pos = arena.get_arena_bounds().get_center()
+
 	if is_inside_tree():
 		var players := get_tree().get_nodes_in_group("player")
 		if players.size() > 0 and is_instance_valid(players[0]) and players[0] is Node2D:
 			player_pos = players[0].global_position
 			
-	var arena := _get_arena()
+	var vp_size := Vector2(640.0, 360.0)
+	if is_inside_tree():
+		var vp = get_viewport()
+		if vp:
+			vp_size = vp.get_visible_rect().size
+			
 	if arena and arena.has_method("get_random_spawn_point_outside_viewport"):
-		return arena.get_random_spawn_point_outside_viewport(player_pos)
+		return arena.get_random_spawn_point_outside_viewport(player_pos, vp_size)
 		
-	# Fallback spawn position outside 640x360 box centered on player
+	# Fallback spawn position outside viewport box centered on player
 	var angle := randf_range(0.0, TAU)
-	var dist := randf_range(380.0, 480.0)
+	var half_extent := maxf(vp_size.x, vp_size.y) * 0.6
+	var dist := randf_range(half_extent + 30.0, half_extent + 120.0)
 	return player_pos + Vector2.RIGHT.rotated(angle) * dist
 
 func _get_arena() -> Node:

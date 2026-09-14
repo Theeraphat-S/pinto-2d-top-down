@@ -100,27 +100,24 @@ func _setup_walls_collision() -> void:
 	walls.collision_layer = LAYER_WORLD
 	walls.collision_mask = 0
 	
-	# Clear any old children to rebuild with updated arena dimensions
-	for c in walls.get_children():
-		c.queue_free()
-		
-	# Top Wall: Y <= 32 (Centered at 1280, 16, size 2560x32)
-	_add_wall_shape("TopWall", Vector2(ARENA_WIDTH * 0.5, BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN))
-	# Bottom Wall: Y >= 1408 (Centered at 1280, 1424, size 2560x32)
-	_add_wall_shape("BottomWall", Vector2(ARENA_WIDTH * 0.5, ARENA_HEIGHT - BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN))
-	# Left Wall: X <= 32 (Centered at 16, 720, size 32x1440)
-	_add_wall_shape("LeftWall", Vector2(BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT))
-	# Right Wall: X >= 2528 (Centered at 2544, 720, size 32x1440)
-	_add_wall_shape("RightWall", Vector2(ARENA_WIDTH - BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT))
-
-func _add_wall_shape(shape_name: String, center: Vector2, size: Vector2) -> void:
-	var col := CollisionShape2D.new()
-	col.name = shape_name
-	col.position = center
-	var rect := RectangleShape2D.new()
-	rect.size = size
-	col.shape = rect
-	walls.add_child(col)
+	var wall_configs := {
+		"TopWall": [Vector2(ARENA_WIDTH * 0.5, BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN)],
+		"BottomWall": [Vector2(ARENA_WIDTH * 0.5, ARENA_HEIGHT - BORDER_MARGIN * 0.5), Vector2(ARENA_WIDTH, BORDER_MARGIN)],
+		"LeftWall": [Vector2(BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT)],
+		"RightWall": [Vector2(ARENA_WIDTH - BORDER_MARGIN * 0.5, ARENA_HEIGHT * 0.5), Vector2(BORDER_MARGIN, ARENA_HEIGHT)]
+	}
+	
+	for wall_name in wall_configs.keys():
+		var cfg: Array = wall_configs[wall_name]
+		var col: CollisionShape2D = walls.get_node_or_null(wall_name) as CollisionShape2D
+		if col == null:
+			col = CollisionShape2D.new()
+			col.name = wall_name
+			col.shape = RectangleShape2D.new()
+			walls.add_child(col)
+		col.position = cfg[0]
+		if col.shape is RectangleShape2D:
+			(col.shape as RectangleShape2D).size = cfg[1]
 
 func _setup_tilemap() -> void:
 	if tilemap_layer == null:

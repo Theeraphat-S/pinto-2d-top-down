@@ -68,6 +68,7 @@ func load_game() -> bool:
 
 	var dict: Dictionary = json.data
 	_apply_dict(dict)
+	apply_display_mode()
 	return true
 
 func save_game() -> bool:
@@ -106,14 +107,27 @@ func record_run_result(final_score: int, survival_time: float, won: bool, kills:
 
 func reset_save_data() -> void:
 	_apply_dict(get_default_data())
+	apply_display_mode()
 	save_game()
+
+func apply_display_mode() -> void:
+	if not Engine.is_editor_hint():
+		if fullscreen:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+		else:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 func is_fullscreen() -> bool:
 	return fullscreen
 
-func set_fullscreen(enabled: bool) -> void:
+func set_fullscreen(enabled: bool, apply_now: bool = true) -> void:
 	fullscreen = enabled
+	if apply_now:
+		apply_display_mode()
 	save_game()
+
+func toggle_fullscreen() -> void:
+	set_fullscreen(not fullscreen)
 
 func _apply_dict(dict: Dictionary) -> void:
 	high_score = int(dict.get("high_score", 0))
